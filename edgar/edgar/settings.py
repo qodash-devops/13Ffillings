@@ -17,6 +17,9 @@ ITEM_PIPELINES = {
 MONGO_URI=os.environ.get('MONGO_HOST','mongodb://localhost:27020')
 MONGO_DATABASE = 'edgar'
 
+LOG_LEVEL = 'INFO'
+LOG_FORMAT = '%(levelname)s: %(message)s'
+
 YEARS=os.environ.get('CRAWL_YEARS','2019').split(',')
 
 SPIDER_MIDDLEWARES = {
