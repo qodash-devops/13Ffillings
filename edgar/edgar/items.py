@@ -14,6 +14,8 @@ class EdgarItem(scrapy.Item):
     filer_cik = scrapy.Field()
     filer_name = scrapy.Field()
     positions =scrapy.Field()
+    quarter_date=scrapy.Field()
     quarter=scrapy.Field()
+    year=scrapy.Field()
     symbol=scrapy.Field()
     docurl=scrapy.Field()

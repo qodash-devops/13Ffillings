@@ -24,7 +24,9 @@ class EdgarPipeline(object):
         self.client.close()
 
     def process_item(self, item, spider):
-        ## how to handle each post
-        self.db[self.collection_name].insert(dict(item))
+        ## how to handle each filing
+        i=dict(item)
+        key = {'docurl': i['docurl']}
+        self.db[self.collection_name].update(key, i, upsert=True)
         logging.debug("Filing added to MongoDB")
         return item

@@ -5,3 +5,4 @@ pymongo
 requests
 Scrapy
 scrapy-deltafetch
+fire

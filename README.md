@@ -9,6 +9,8 @@ Based on scrapy (https://scrapy.org/).
        $ docker-compose up -d mongo
        $ docker-compose up -d crawler
 #### run on host:
+make sure to have libdb-dev installed.<br>
+
        $ git clone https://github.com/qodash-devops/13Ffillings.git
        $ cd cd 13Ffillings
        $ pip install -r requirements

@@ -1,7 +1,9 @@
 import scrapy
 import re
 from ..items import EdgarItem
+from datetime import datetime
 
+quarters={3:'Q1',6:'Q2',9:'Q3',12:'Q4'}
 
 def find_element(txt,tag='reportCalendarOrQuarter'):
     res=re.findall(f'<{tag}>[\s\S]*?<\/{tag}>', txt)
@@ -46,7 +48,13 @@ class FilingSpider(scrapy.Spider):
         report_type=find_element(txt,'reportType')[0]
         assert '13F' in report_type
         filing=EdgarItem()
-        filing['quarter']=find_element(txt,'reportCalendarOrQuarter')[0]
+        filing['quarter_date']=find_element(txt,'reportCalendarOrQuarter')[0]
+        try:
+            dt=datetime.strptime(filing['quarter_date'],'%m-%d-%Y')
+            filing['year']=dt.year
+            filing['quarter']=quarters[dt.month]
+        except:
+            self.logger.error(f"Parsing date:{filing['quarter_date']}")
         filing['filer_cik']=find_element(txt,'cik')[0]
         filer_name=find_element(txt,'filingManager')[0]
         filing['filer_name']=find_element(filer_name,'name')[0]
