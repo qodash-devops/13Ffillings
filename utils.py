@@ -15,3 +15,7 @@ cache = CacheManager(**parse_cache_config_options(cache_opts))
 curdir=os.path.dirname(os.path.realpath(__file__))
 
 
+def clear_cache():
+    from beaker.cache import cache_managers
+    for _cache in cache_managers.values():
+        _cache.clear()
