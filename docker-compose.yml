@@ -1,0 +1,19 @@
+version: '3.7'
+services:
+  crawler:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    environment:
+      - 'CRAWL_YEARS=2019,2020'
+      - 'MONGO_HOST=mongodb://13Fmongo:27020'
+    volumes:
+      - '/home/docker/edgar/crawler:/crawler'
+  mongo:
+    image: mongo:latest
+    container_name: 13Fmongo
+    restart: always
+    volumes:
+     - /home/docker/13f/mongo/data/db:/data/db
+    ports:
+      - 27020:27017

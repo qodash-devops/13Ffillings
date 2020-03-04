@@ -1,0 +1,7 @@
+Beaker
+bs4
+lxml
+pymongo
+requests
+Scrapy
+scrapy-deltafetch
