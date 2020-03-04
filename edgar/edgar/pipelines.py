@@ -2,8 +2,8 @@ import logging
 import pymongo
 from utils import cache
 import requests
-# openfigi_apikey='a1d6899c-553b-4ee4-bb21-364417efeac'
 openfigi_apikey=''
+# openfigi_apikey=''
 class EdgarPipeline(object):
     collection_name = '13F'
     collection_stock_info='stock_info'
@@ -50,16 +50,18 @@ class EdgarPipeline(object):
     @staticmethod
     @cache.region('long_term', 'get_stock_info')
     def openfigi(cusips):
-        if len(cusips)>10:
-            chunks = [cusips[x:x + 10] for x in range(0, len(cusips), 10)]
+        chunk_size=5
+        if len(cusips)>chunk_size:
+            chunks = [cusips[x:x + chunk_size] for x in range(0, len(cusips), chunk_size)]
             res=[]
             for c in chunks:
                 r=EdgarPipeline.openfigi(c)
                 res.append(r)
+            return res
 
 
         job = [{'idType': 'ID_CUSIP', 'idValue': cusip} for cusip in cusips]
-        openfigi_url = 'https://api.openfigi.com/v1/mapping'
+        openfigi_url = 'https://api.openfigi.com/v2/mapping'
         openfigi_headers = {'Content-Type': 'text/json'}
         if openfigi_apikey:
             openfigi_headers['X-OPENFIGI-APIKEY'] = openfigi_apikey
@@ -78,4 +80,5 @@ class EdgarPipeline(object):
 
 
 if __name__ == '__main__':
-    res=EdgarPipeline.openfigi(['464288240','171085','464287879'])
+    cusips=['060505104', '874054109', '921908844', '693366205', '862121100', '33733E302', '33738D101', 'G0084W101', '902641646', 'G2709G107']
+    res=EdgarPipeline.openfigi(cusips)
