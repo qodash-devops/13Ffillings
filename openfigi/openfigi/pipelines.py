@@ -1,14 +1,13 @@
-import logging
 import pymongo
-from utils import cache
-import requests
+import logging
 
-class EdgarPipeline(object):
-    collection_name = '13F'
-    collection_stock_info='stock_info'
+class OpenfigiPipeline(object):
+    collection_stock_info = 'stock_info'
+
     def __init__(self, mongo_uri, mongo_db):
         self.mongo_uri = mongo_uri
         self.mongo_db = mongo_db
+
     @classmethod
     def from_crawler(cls, crawler):
         ## pull in information from settings.py
@@ -16,6 +15,7 @@ class EdgarPipeline(object):
             mongo_uri=crawler.settings.get('MONGO_URI'),
             mongo_db=crawler.settings.get('MONGO_DATABASE')
         )
+
     def open_spider(self, spider):
         ## initializing spider
         ## opening db connection
@@ -28,10 +28,7 @@ class EdgarPipeline(object):
 
     def process_item(self, item, spider):
         ## how to handle each filing
-        i=dict(item)
-        key = {'docurl': i['docurl']}
-        self.db[self.collection_name].update(key, i, upsert=True)
-        logging.debug("Filing added to MongoDB")
+        i = dict(item)
+        key = {'cusip': i['cusip']}
+        self.db[self.collection_stock_info].update(key, i, upsert=True)
         return item
-
-
