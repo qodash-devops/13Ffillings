@@ -18,6 +18,7 @@ run_crawler(){
         echo FAIL
     fi
 }
+echo "MONGO_URI=$MONGO_URI"
 run_crawler edgar
 run_crawler openfigi
 tail -f $log_file

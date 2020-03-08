@@ -6,14 +6,14 @@ services:
       dockerfile: Dockerfile
     environment:
       - 'CRAWL_YEARS=2019,2020'
-      - 'MONGO_HOST=mongodb://13Fmongo:27017'
+      - 'MONGO_URI=mongodb://13fmongo:27017'
     volumes:
       - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
     depends_on:
       - mongo
   mongo:
     image: mongo:latest
-    container_name: 13Fmongo
+    container_name: 13fmongo
     restart: always
     volumes:
      - /home/docker/13f/mongo/data/db:/data/db

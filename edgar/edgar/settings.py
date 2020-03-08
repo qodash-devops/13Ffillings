@@ -14,7 +14,7 @@ ITEM_PIPELINES = {
     'edgar.pipelines.EdgarPipeline': 300,
 }
 
-MONGO_URI=os.environ.get('MONGO_HOST','mongodb://localhost:27020')
+MONGO_URI=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 MONGO_DATABASE = 'edgar'
 
 LOG_LEVEL = 'INFO'

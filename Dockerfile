@@ -3,4 +3,4 @@ COPY requirements.txt /crawler/requirements.txt
 RUN pip install -r /crawler/requirements.txt
 ADD . /crawler
 WORKDIR /crawler
-CMD tail -f /dev/null
+CMD /crawler/run.sh
