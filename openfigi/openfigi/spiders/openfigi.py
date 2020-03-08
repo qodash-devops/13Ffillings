@@ -1,9 +1,7 @@
 import scrapy
-from utils import cache
 import os
 from ..items import OpenfigiItem
 import pymongo
-import requests
 import json
 
 mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')

@@ -1,7 +1,5 @@
 import logging
 import pymongo
-from utils import cache
-import requests
 
 class EdgarPipeline(object):
     collection_name = '13F'
