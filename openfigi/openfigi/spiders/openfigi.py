@@ -17,7 +17,7 @@ chunk_split=lambda lst,n:[lst[i:i + n] for i in range(0, len(lst), n)]
 
 class StockInfoSpider(scrapy.Spider):
     name = "openfigi"
-    chunk_size=50
+    chunk_size=20
     def _get_missing_cusips(self):
         all_cusips=filings.aggregate([{"$group": {"_id": "null", "cusips": {"$addToSet": "$positions.cusip"}}}])
         all_cusips=list(all_cusips)[0]['cusips']
