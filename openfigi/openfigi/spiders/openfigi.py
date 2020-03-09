@@ -5,7 +5,6 @@ import pymongo
 import json
 
 mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
-mongo_db='stock_info'
 client = pymongo.MongoClient(mongo_uri)
 db = client['edgar']
 stock_info=db['stock_info']
@@ -17,11 +16,12 @@ chunk_split=lambda lst,n:[lst[i:i + n] for i in range(0, len(lst), n)]
 
 class StockInfoSpider(scrapy.Spider):
     name = "openfigi"
-    chunk_size=20
+    chunk_size=10
     def _get_missing_cusips(self):
-        all_cusips=filings.aggregate([{"$group": {"_id": "null", "cusips": {"$addToSet": "$positions.cusip"}}}])
-        all_cusips=list(all_cusips)[0]['cusips']
-        all_cusips=list(set(sum(all_cusips,[])))
+        self.logger.info('Loading missing cusips from mongo...')
+        filings.ensure_index([("positions.cusip",pymongo.DESCENDING)])
+        all_cusips=filings.distinct("positions.cusip")
+        all_cusips=list(all_cusips)
         present=[c['cusip'] for c in list(stock_info.find({},{"cusip":1}))]
         missing=[c for c in all_cusips if not c in present]
         return sorted(missing)
@@ -29,6 +29,8 @@ class StockInfoSpider(scrapy.Spider):
     def start_requests(self):
         missing_cusips=self._get_missing_cusips()
         chunks=chunk_split(missing_cusips,self.chunk_size)
+        if len(missing_cusips)>100:
+            self.logger.warning(f'loading {len(missing_cusips)} cusips in {len(chunks)} chunks')
         for c in chunks:
             job = [{'idType': 'ID_CUSIP', 'idValue': cusip} for cusip in c]
             openfigi_url = 'https://api.openfigi.com/v2/mapping'
