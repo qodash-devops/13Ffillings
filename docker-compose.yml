@@ -19,3 +19,12 @@ services:
      - /home/docker/13f/mongo/data/db:/data/db
     ports:
       - 27020:27017
+
+  metabase:
+    image: metabase/metabase
+    container_name: edgar-metabase
+    restart: always
+    ports:
+    - 3000:3000
+    depends_on:
+      - mongo
