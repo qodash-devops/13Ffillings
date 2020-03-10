@@ -50,5 +50,10 @@ class StockInfoSpider(scrapy.Spider):
             if 'error' in jsonresponse[i].keys():
                 I['info']=jsonresponse[i]
             else:
-                I['info']=jsonresponse[i]['data'][0]
+                info=[d for d in jsonresponse[i]['data'] if '/' not in d['ticker']]
+                if info==[]:
+                    info=jsonresponse[i]['data'][0]
+                else:
+                    info = info[0]
+                I['info']=info
             yield I

@@ -20,6 +20,18 @@ services:
     ports:
       - 27020:27017
 
+#  mongobi:
+#    container_name: 13fmongo-bi
+#    build:
+#      context: cubejs
+#      dockerfile: Dockerfiler_mongobi
+#    environment:
+#      - 'MONGODB_HOST=13fmongo'
+#      - 'MONGODB_PORT=27017'
+#    ports:
+#    - 3307:3307
+#    depends_on:
+#      - mongo
   metabase:
     image: metabase/metabase
     container_name: edgar-metabase

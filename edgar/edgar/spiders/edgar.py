@@ -17,7 +17,9 @@ class FilingSpider(scrapy.Spider):
         years=self.settings.get('YEARS')
         urls=[]
         for y in years:
+            self.logger.info(f"Scraping YEAR={y}")
             for q in ['QTR'+str(i) for i in [1,2,3,4]]:
+                self.logger.info(f"Scraping QUARTER={y}/{q}")
                 url=f'https://www.sec.gov/Archives/edgar/daily-index/{y}/{q}/'
                 urls.append(url)
         for url in urls:
