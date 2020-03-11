@@ -5,7 +5,7 @@ import scrapy.utils.log
 BOT_NAME = 'edgar'
 SPIDER_MODULES = ['edgar.spiders']
 # NEWSPIDER_MODULE = 'edgar.spiders'
-ROBOTSTXT_OBEY = True
+ROBOTSTXT_OBEY = False
 
 DOWNLOAD_DELAY = .10
 RANDOMIZE_DOWNLOAD_DELAY = True
@@ -34,7 +34,7 @@ DELTAFETCH_ENABLED = True
 
 color_formatter = ColoredFormatter(
     (
-        BOT_NAME+'>>> %(log_color)s%(levelname)-5s%(reset)s '
+        '%(name)s>>> %(log_color)s%(levelname)-5s%(reset)s '
         '%(yellow)s[%(asctime)s]%(reset)s'
         '%(white)s %(name)s %(funcName)s %(bold_purple)s:%(lineno)d%(reset)s '
         '%(log_color)s%(message)s%(reset)s'

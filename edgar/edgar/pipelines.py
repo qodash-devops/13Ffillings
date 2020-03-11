@@ -1,4 +1,4 @@
-import logging
+import yfinance as yf
 import pymongo
 
 class EdgarPipeline(object):
@@ -27,12 +27,28 @@ class EdgarPipeline(object):
 
     def process_item(self, item, spider):
         ## how to handle each filing
-        i=dict(item)
-        key = {'docurl': i['docurl']}
-        if len(item['positions'])==0:
-            self.db[self.collection_empty].update(key, i, upsert=True)
+        i = dict(item)
+        if spider.name=='quantumonline':
+            key = {'cusip': i['cusip']}
+            try:
+                i['close'],i['info']=self.get_spots(i['ticker'])
+            except:
+                i['close']=[]
+            self.db[self.collection_stock_info].update(key, i, upsert=True)
         else:
-            self.db[self.collection_name].update(key, i, upsert=True)
+            key = {'docurl': i['docurl']}
+            if len(item['positions'])==0:
+                self.db[self.collection_empty].update(key, i, upsert=True)
+            else:
+                self.db[self.collection_name].update(key, i, upsert=True)
         return item
 
 
+    def get_spots(self,ticker):
+        t = yf.Ticker(ticker)
+        info=t.info
+        res = t.history(period="3y")
+        res = res["Close"]
+        res.index = res.index.astype(str)
+        close = res.dropna().to_frame().reset_index().to_dict(orient='records')
+        return close,info

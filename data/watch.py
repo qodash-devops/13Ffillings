@@ -13,7 +13,7 @@ db = client['edgar']
 stock_info=db['stock_info']
 positions_prices=db['positions_prices']
 positions=db['positions_view']
-stock_prices=db['stock_prices']
+
 
 def update_positions_view():
 
@@ -30,10 +30,8 @@ def update_positions_view():
     ])
     for r in res:
         ticker=stock_info.find_one({"cusip":r["cusip"]})
-        spots=stock_prices.find_one({'_id':ticker['info']['ticker']})
-        if spots is None:
-            continue
-        spots=pd.DataFrame(spots['Close']).set_index('Date')
+        spots=pd.DataFrame(ticker['close']).set_index('Date')
+        spots.index = pd.to_datetime(spots.index)
         r['spots']=spots
     res=list(res)
     pass

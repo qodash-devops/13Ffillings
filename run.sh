@@ -10,7 +10,7 @@ run_crawler(){
     print_title "Running crawler $1..."
     cd $1
     export PYTHONPATH=$PWD
-    python /crawler/$1/crawler-go.py   >> $log_file 2>&1 &
+    python /crawler/edgar/crawler-go.py $1   >> $log_file 2>&1 &
     cd ..
     if [ $? -eq 0 ]; then
         echo OK
@@ -23,5 +23,5 @@ run_crawler(){
 
 echo "MONGO_URI=$MONGO_URI"
 run_crawler edgar
-run_crawler openfigi
+run_crawler quantumonline
 tail -f $log_file
