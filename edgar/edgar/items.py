@@ -9,13 +9,20 @@ import scrapy
 
 class EdgarItem(scrapy.Item):
     # define the fields for your item here like:
-    # name = scrapy.Field()
+
+    filing_type=scrapy.Field()
     filer_name=scrapy.Field()
     filer_cik = scrapy.Field()
-    filer_name = scrapy.Field()
     positions =scrapy.Field()
     quarter_date=scrapy.Field()
     quarter=scrapy.Field()
     year=scrapy.Field()
     symbol=scrapy.Field()
     docurl=scrapy.Field()
+
+
+class StockInfoItem(scrapy.Item):
+    # define the fields for your item here like:
+    # name = scrapy.Field()
+    cusip=scrapy.Field()
+    info=scrapy.Field()

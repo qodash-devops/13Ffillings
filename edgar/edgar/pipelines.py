@@ -2,8 +2,9 @@ import logging
 import pymongo
 
 class EdgarPipeline(object):
-    collection_name = '13F'
+    collection_name = 'filings_13f'
     collection_stock_info='stock_info'
+    collection_empty = 'empty_filings'
     def __init__(self, mongo_uri, mongo_db):
         self.mongo_uri = mongo_uri
         self.mongo_db = mongo_db
@@ -28,8 +29,10 @@ class EdgarPipeline(object):
         ## how to handle each filing
         i=dict(item)
         key = {'docurl': i['docurl']}
-        self.db[self.collection_name].update(key, i, upsert=True)
-        logging.debug("Filing added to MongoDB")
+        if len(item['positions'])==0:
+            self.db[self.collection_empty].update(key, i, upsert=True)
+        else:
+            self.db[self.collection_name].update(key, i, upsert=True)
         return item
 
 

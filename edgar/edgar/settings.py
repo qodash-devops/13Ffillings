@@ -7,9 +7,9 @@ SPIDER_MODULES = ['edgar.spiders']
 # NEWSPIDER_MODULE = 'edgar.spiders'
 ROBOTSTXT_OBEY = True
 
-DOWNLOAD_DELAY = .25
+DOWNLOAD_DELAY = .10
 RANDOMIZE_DOWNLOAD_DELAY = True
-CONCURRENT_REQUESTS_PER_IP=15
+CONCURRENT_REQUESTS_PER_IP=50
 # ...
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
@@ -19,6 +19,7 @@ ITEM_PIPELINES = {
 
 MONGO_URI=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 MONGO_DATABASE = 'edgar'
+
 
 LOG_LEVEL = 'INFO'
 LOG_FORMAT = '%(levelname)s: %(message)s'

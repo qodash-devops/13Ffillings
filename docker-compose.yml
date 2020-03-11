@@ -5,7 +5,7 @@ services:
       context: .
       dockerfile: Dockerfile
     environment:
-      - 'CRAWL_YEARS=2019,2020'
+      - 'CRAWL_YEARS=2018,2019,2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
     volumes:
       - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
@@ -36,6 +36,10 @@ services:
     image: metabase/metabase
     container_name: edgar-metabase
     restart: always
+    environment:
+      - 'MB_DB_FILE=/metabase-data/metabase.db'
+    volumes:
+    - /home/docker/metabase-data:/metabase-data
     ports:
     - 3000:3000
     depends_on:
