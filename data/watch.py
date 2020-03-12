@@ -29,13 +29,8 @@ def update_positions_view():
             },
             {"$match": {"matched_docs": { "$eq": []}}}
     ])
-    for r in tqdm(list(res)):
+    for r in tqdm(res):
         r=update_position(r)
-
-
-
-
-    res=list(res)
 def update_position(p):
         try:
             ticker=stock_info.find_one({"cusip":p["cusip"]})
