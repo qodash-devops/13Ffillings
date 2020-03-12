@@ -27,9 +27,9 @@ def update_positions_view():
                     "as": "matched_docs"
                     }
             },
-            {"$match": {"matched_docs": { "$eq": []}}} , {"$limit":50}
+            {"$match": {"matched_docs": { "$eq": []}}}
     ])
-    for r in tqdm(res):
+    for r in tqdm(list(res)):
         r=update_position(r)
 
 
