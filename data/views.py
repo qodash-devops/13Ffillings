@@ -32,6 +32,11 @@ views = {
     "positions_view":[{"$unwind": "$positions"},{"$project": {"filer_name":1,"quarter_date":1,"cusip":"$positions.cusip","quantity":"$positions.quantity"}}]
 }
 
+
+
+
+
+
 if __name__ == '__main__':
     for k, v in views.items():
         create_view(k, v)

@@ -1,5 +1,6 @@
 import yfinance as yf
 import pymongo
+import sys
 
 class EdgarPipeline(object):
     collection_name = 'filings_13f'
@@ -36,11 +37,14 @@ class EdgarPipeline(object):
                 i['close']=[]
             self.db[self.collection_stock_info].update(key, i, upsert=True)
         else:
-            key = {'docurl': i['docurl']}
-            if len(item['positions'])==0:
-                self.db[self.collection_empty].update(key, i, upsert=True)
-            else:
-                self.db[self.collection_name].update(key, i, upsert=True)
+            try:
+                key = {'docurl': i['docurl']}
+                if len(item['positions'])==0:
+                    self.db[self.collection_empty].update(key, i, upsert=True)
+                else:
+                    self.db[self.collection_name].update(key, i, upsert=True)
+            except:
+                print('Error inserting item==>'+str(sys.exc_info()))
         return item
 
 

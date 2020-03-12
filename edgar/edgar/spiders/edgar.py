@@ -79,11 +79,15 @@ class FilingSpider(scrapy.Spider):
         filing['filing_type']='13F'
         res_positions=[]
         positions=find_element(txt,'ns1:infoTable')
+        ns='ns1:'
+        if len(positions)==0:
+            positions = find_element(txt, 'infoTable')
+            ns=''
         for p in positions:
-            stock_name=find_element(p,'ns1:nameOfIssuer')[0]
-            stock_cusip=find_element(p,'ns1:cusip')[0]
-            shares=find_element(p,'ns1:shrsOrPrnAmt')[0]
-            n_shares=find_element(shares,'ns1:sshPrnamt')[0]
+            stock_name=find_element(p,ns+'nameOfIssuer')[0]
+            stock_cusip=find_element(p,ns+'cusip')[0]
+            shares=find_element(p,ns+'shrsOrPrnAmt')[0]
+            n_shares=find_element(shares,ns+'sshPrnamt')[0]
             put_call=find_element(txt,'putCall')
             res_positions.append({'name':stock_name,'cusip':stock_cusip,'symbol':'',
                                   'quantity':n_shares,'callput':put_call})

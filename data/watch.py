@@ -6,6 +6,7 @@ from datetime import timedelta
 import warnings
 warnings.simplefilter("ignore")
 from fire import Fire
+from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 
 mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
@@ -16,9 +17,9 @@ positions_recap=db['stocks_positions']
 positions=db['positions_view']
 
 
-def update_positions_view():
-
+def update_positions_view(batch_size=1000):
     res=positions.aggregate([
+        {"$sample": {"size": batch_size}},
         {
             "$lookup":{
                     "from": "positions_prices",
@@ -29,8 +30,11 @@ def update_positions_view():
             },
             {"$match": {"matched_docs": { "$eq": []}}}
     ])
-    for r in tqdm(res):
+    # res=positions.aggregate([{"$sample":{"size":batch_size}}])
+    res=list(res)
+    for r in tqdm(list(res)):
         r=update_position(r)
+
 def update_position(p):
         try:
             ticker=stock_info.find_one({"cusip":p["cusip"]})
@@ -39,9 +43,14 @@ def update_position(p):
                 spots=pd.DataFrame(ticker['close']).set_index('Date')
                 spots.index = pd.to_datetime(spots.index)
             else:
+                ticker['ticker']=ticker['ticker'].replace('*','')
                 t=yf.Ticker(ticker['ticker'])
                 spots=t.history(period='3y')
                 ticker['info']=t.info
+                ticker['close'] = spots["Close"].copy()
+                ticker['close'].index = ticker['close'].index.astype(str)
+                ticker['close'] = ticker['close'].dropna().to_frame().reset_index().to_dict(orient='records')
+                stock_info.update({"cusip":p["cusip"]},ticker)
             quarter_date = nearest(spots.index, pd.to_datetime(p['quarter_date']))
             next_quarter = nearest(spots.index, pd.to_datetime(p['quarter_date']) + timedelta(days=30.5 * 3))
             past_quarter = nearest(spots.index, pd.to_datetime(p['quarter_date']) - timedelta(days=30.5 * 3))
@@ -65,10 +74,15 @@ def update_position(p):
                 logging.error(f'Updating position : (cusip={p["cusip"]})')
         return p
 
-
 def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
+def update_mproc(n_proc=1,batch_size=100000):
+    pool=ProcessPoolExecutor(n_proc)
+    for i in range(n_proc):
+        f=pool.submit(update_positions_view,batch_size)
+    pool.shutdown(wait=True)
+
 
 if __name__ == '__main__':
-    update_positions_view()
+    update_mproc(5)

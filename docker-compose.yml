@@ -11,6 +11,21 @@ services:
       - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
     depends_on:
       - mongo
+  crawlermissing:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "python /crawler/edgar/crawler-go.py edgarmissing   "
+    environment:
+      - 'CRAWL_YEARS=2018,2019,2020'
+      - 'MONGO_URI=mongodb://13fmongo:27017'
+    volumes:
+      - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
+    restart: always
+    depends_on:
+      - mongo
+
+
   mongo:
     image: mongo:latest
     container_name: 13fmongo
