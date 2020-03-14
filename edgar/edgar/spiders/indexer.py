@@ -65,6 +65,7 @@ class EdgarIndexSpider(scrapy.Spider):
                 url = 'https://www.sec.gov/Archives/' + url[0]
                 f_list.append(url)
         item['n_filings'] = len(f_list)
+        item['filings']=f_list
         yield item
 
 
