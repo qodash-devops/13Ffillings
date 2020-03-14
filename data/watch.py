@@ -33,7 +33,7 @@ def update_positions_view_batch(batch_size=1000,fetch=False):
         batch_id=0
 
     res=positions.aggregate([
-
+        {"$sample":{"size":batch_size}},
         {
             "$lookup":{
                     "from": "positions_prices",
@@ -43,7 +43,7 @@ def update_positions_view_batch(batch_size=1000,fetch=False):
                     }
             },
             {"$match": {"matched_docs": { "$eq": []}}},
-        {"$limit": batch_size},
+        # {"$limit": batch_size},
     ])
     res=list(res)
     failures=[]
@@ -99,7 +99,7 @@ def update_position(p,fetch_yahoo=True):
 def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
-def update_all(batch_size=1000,fetch=False,threaded=True):
+def update_all(batch_size=1000,fetch=False,nthreads=5):
     # logger.info('Getting positions count...')
     # n_positions=positions.count_documents({})
     # n_existing=positions_recap.count_documents({})
@@ -107,15 +107,15 @@ def update_all(batch_size=1000,fetch=False,threaded=True):
     n_missing=5000000
     logger.warning(f'{n_missing} missing positions')
 
-    if threaded:
+    if nthreads>0:
         batches=[(batch_size,i) for i in range(int(n_missing/batch_size))]
         run_threaded(update_positions_view_batch,batches)
     else:
         for i in tqdm(range(int(n_missing/batch_size)),position=0,desc='Total',leave=False):
             update_positions_view_batch(batch_size=batch_size,fetch=fetch)
 
-def run_threaded(f, my_iter):
-    with ThreadPoolExecutor(4) as executor:
+def run_threaded(f, my_iter,pool_size=4):
+    with ThreadPoolExecutor(pool_size) as executor:
         results = list(tqdm(executor.map(f, my_iter),desc='Total', total=len(my_iter)))
     return results
 
