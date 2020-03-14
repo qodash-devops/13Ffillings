@@ -85,4 +85,9 @@ def update_mproc(n_proc=1,batch_size=100000):
 
 
 if __name__ == '__main__':
-    update_mproc(3)
+    Fire({
+        'update_positions':update_positions_view,
+        'multi_proce':update_mproc
+    })
+
+    # update_mproc(3)
