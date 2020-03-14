@@ -9,7 +9,7 @@ services:
       - 'CRAWL_YEARS=2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
     volumes:
-      - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
+      - '/home/docker/edgar/crawler/jobdir/indexer:/var/tmp/edgarfilings'
     restart: always
     depends_on:
       - mongo
@@ -22,7 +22,6 @@ services:
       - 'CRAWL_YEARS=2018,2019,2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
     volumes:
-      - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
       - '/home/docker/edgar/crawler/jobdir/indexer:/var/tmp/edgarindex'
     restart: always
     depends_on:
