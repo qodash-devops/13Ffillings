@@ -3,6 +3,7 @@ import os,pymongo
 import logging
 from tqdm import tqdm,trange
 from datetime import timedelta
+from concurrent.futures import ThreadPoolExecutor
 import warnings
 from fire import Fire
 import pandas as pd
@@ -25,6 +26,12 @@ positions=db['positions_view']
 
 
 def update_positions_view_batch(batch_size=1000,fetch=False):
+    if type(batch_size)==tuple:
+        batch_id=batch_size[1]
+        batch_size=batch_size[0]
+    else:
+        batch_id=0
+
     res=positions.aggregate([
 
         {
@@ -38,11 +45,9 @@ def update_positions_view_batch(batch_size=1000,fetch=False):
             {"$match": {"matched_docs": { "$eq": []}}},
         {"$limit": batch_size},
     ])
-    # res=positions.aggregate([{"$sample":{"size":batch_size}}])
     res=list(res)
-    # pbar=tqdm(list(res),position=1,desc='Positions',leave=True)
     failures=[]
-    pbar=tqdm(res, position=1,desc='Batch', leave=True)
+    pbar=tqdm(res, position=batch_id+1,desc=f'Batch ({batch_id})', leave=True)
 
     for r in pbar:
         try:
@@ -94,16 +99,25 @@ def update_position(p,fetch_yahoo=True):
 def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
-def update_all(batch_size=1000,fetch=False):
-    logger.info('Getting positions count...')
-    n_positions=positions.count_documents({})
-    n_existing=positions_recap.count_documents({})
-    n_missing=n_positions-n_existing
+def update_all(batch_size=1000,fetch=False,threaded=True):
+    # logger.info('Getting positions count...')
+    # n_positions=positions.count_documents({})
+    # n_existing=positions_recap.count_documents({})
+    # n_missing=n_positions-n_existing
+    n_missing=5000000
     logger.warning(f'{n_missing} missing positions')
-    for i in tqdm(range(int(n_missing/batch_size)),position=0,desc='Total',leave=False):
-        update_positions_view_batch(batch_size=batch_size,fetch=fetch)
+
+    if threaded:
+        batches=[(batch_size,i) for i in range(int(n_missing/batch_size))]
+        run_threaded(update_positions_view_batch,batches)
+    else:
+        for i in tqdm(range(int(n_missing/batch_size)),position=0,desc='Total',leave=False):
+            update_positions_view_batch(batch_size=batch_size,fetch=fetch)
+
+def run_threaded(f, my_iter):
+    with ThreadPoolExecutor(4) as executor:
+        results = list(tqdm(executor.map(f, my_iter),desc='Total', total=len(my_iter)))
+    return results
 
 if __name__ == '__main__':
     Fire({'all':update_all,'batch':update_positions_view_batch})
-
-    # update_mproc(3)
