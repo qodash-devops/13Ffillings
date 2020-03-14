@@ -100,6 +100,7 @@ def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
 def update_all(batch_size=1000,fetch=False,nthreads=5):
+    batch_size=int(batch_size)
     logger.info('Getting positions count...')
     n_positions=positions.count_documents({})
     n_existing=positions_recap.count_documents({})
