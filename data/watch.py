@@ -9,7 +9,7 @@ from fire import Fire
 from concurrent.futures import ProcessPoolExecutor
 import pandas as pd
 
-mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
+mongo_uri=os.environ.get('MONGO_URI','mongodb://edgar-miner:27020')
 client = pymongo.MongoClient(mongo_uri)
 db = client['edgar']
 stock_info=db['stock_info']
@@ -17,9 +17,9 @@ positions_recap=db['stocks_positions']
 positions=db['positions_view']
 
 
-def update_positions_view(batch_size=1000):
+def update_positions_view(batch_size=1000,fetch=False):
     res=positions.aggregate([
-        {"$sample": {"size": batch_size}},
+        # {"$sample": {"size": batch_size}},
         {
             "$lookup":{
                     "from": "positions_prices",
@@ -33,16 +33,16 @@ def update_positions_view(batch_size=1000):
     # res=positions.aggregate([{"$sample":{"size":batch_size}}])
     res=list(res)
     for r in tqdm(list(res)):
-        r=update_position(r)
+        r=update_position(r,fetch_yahoo=fetch)
 
-def update_position(p):
+def update_position(p,fetch_yahoo=True):
         try:
             ticker=stock_info.find_one({"cusip":p["cusip"]})
 
             if ticker['close']!=[] and 'info' in ticker.keys():
                 spots=pd.DataFrame(ticker['close']).set_index('Date')
                 spots.index = pd.to_datetime(spots.index)
-            else:
+            elif fetch_yahoo:
                 ticker['ticker']=ticker['ticker'].replace('*','')
                 t=yf.Ticker(ticker['ticker'])
                 spots=t.history(period='3y')
@@ -77,17 +77,9 @@ def update_position(p):
 def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
-def update_mproc(n_proc=1,batch_size=100000):
-    pool=ProcessPoolExecutor(n_proc)
-    for i in range(n_proc):
-        f=pool.submit(update_positions_view,batch_size)
-    pool.shutdown(wait=True)
 
 
 if __name__ == '__main__':
-    Fire({
-        'update_positions':update_positions_view,
-        'multi_proce':update_mproc
-    })
+    Fire(update_positions_view)
 
     # update_mproc(3)
