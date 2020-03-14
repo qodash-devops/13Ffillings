@@ -8,8 +8,8 @@ services:
     environment:
       - 'CRAWL_YEARS=2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
-    volumes:
-      - '/home/docker/edgar/crawlers/jobdir/edgarfilings:/var/tmp/scrapy/edgarfilings'
+#    volumes:
+#      - '/home/docker/edgar/crawlers/jobdir/edgarfilings:/var/tmp/scrapy/edgarfilings'
     restart: always
     depends_on:
       - mongo
@@ -21,8 +21,8 @@ services:
     environment:
       - 'CRAWL_YEARS=2018,2019,2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
-    volumes:
-      - '/home/docker/edgar/crawlers/jobdir/indexer:/var/tmp/scrapy/edgarindex'
+#    volumes:
+#      - '/home/docker/edgar/crawlers/jobdir/indexer:/var/tmp/scrapy/edgarindex'
     restart: always
     depends_on:
       - mongo
@@ -34,8 +34,8 @@ services:
     environment:
       - 'CRAWL_YEARS=2018,2019,2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
-    volumes:
-      - '/home/docker/edgar/crawlers/jobdir/stockinfo:/var/tmp/scrapy/stockinfo'
+#    volumes:
+#      - '/home/docker/edgar/crawlers/jobdir/stockinfo:/var/tmp/scrapy/stockinfo'
     restart: always
     depends_on:
       - mongo
