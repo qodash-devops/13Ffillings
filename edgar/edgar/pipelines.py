@@ -30,7 +30,7 @@ class EdgarPipeline(object):
     def process_item(self, item, spider):
         ## how to handle each filing
         i = dict(item)
-        if spider.name=='quantumonline':
+        if spider.name=='stockinfo':
             key = {'cusip': i['cusip']}
             try:
                 i['close'],i['info']=self.get_spots(i['ticker'])
