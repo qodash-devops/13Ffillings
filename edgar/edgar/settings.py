@@ -14,7 +14,7 @@ CONCURRENT_REQUESTS_PER_IP=100
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
-    'edgar.pipelines.EdgarPipeline': 300,
+    'edgar.pipelines.EdgarPipeline': 300
 }
 
 MONGO_URI=os.environ.get('MONGO_URI','mongodb://localhost:27020')

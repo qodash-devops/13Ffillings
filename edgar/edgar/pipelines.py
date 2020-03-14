@@ -6,6 +6,7 @@ class EdgarPipeline(object):
     collection_name = 'filings_13f'
     collection_stock_info='stock_info'
     collection_empty = 'empty_filings'
+    index_collection = 'page_index'
     def __init__(self, mongo_uri, mongo_db):
         self.mongo_uri = mongo_uri
         self.mongo_db = mongo_db
@@ -36,6 +37,10 @@ class EdgarPipeline(object):
             except:
                 i['close']=[]
             self.db[self.collection_stock_info].update(key, i, upsert=True)
+        elif spider.name=='edgarindex':
+            index_def = dict(item)
+            self.db[self.index_collection].update({'index': index_def['index']},
+                                                  index_def, upsert=True)
         else:
             try:
                 key = {'docurl': i['docurl']}
@@ -56,3 +61,5 @@ class EdgarPipeline(object):
         res.index = res.index.astype(str)
         close = res.dropna().to_frame().reset_index().to_dict(orient='records')
         return close,info
+
+

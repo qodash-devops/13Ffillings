@@ -1,31 +1,44 @@
 version: '3.7'
 services:
-  crawler:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    environment:
-      - 'CRAWL_YEARS=2019,2020'
-      - 'MONGO_URI=mongodb://13fmongo:27017'
-    volumes:
-      - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
-    depends_on:
-      - mongo
-    restart: always
-  crawlermissing:
+#  crawler:
+#    build:
+#      context: .
+#      dockerfile: Dockerfile
+#    environment:
+#      - 'CRAWL_YEARS=2019,2020'
+#      - 'MONGO_URI=mongodb://13fmongo:27017'
+#    volumes:
+#      - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
+#    depends_on:
+#      - mongo
+#    restart: always
+  filingcrwawler:
     build:
       context: .
       dockerfile: Dockerfile
     command: "python /crawler/edgar/crawler-go.py edgarmissing   "
     environment:
-      - 'CRAWL_YEARS=2018,2019,2020'
+      - 'CRAWL_YEARS=2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
     volumes:
       - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
     restart: always
     depends_on:
       - mongo
-
+  filingindexer:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "python /crawler/edgar/crawler-go.py edgarindex   "
+    environment:
+      - 'CRAWL_YEARS=2018,2019,2020'
+      - 'MONGO_URI=mongodb://13fmongo:27017'
+    volumes:
+      - '/home/docker/edgar/crawler/.scrapy:/crawler/edgar/.scrapy'
+      - '/home/docker/edgar/crawler/jobdir/indexer:/var/tmp/edgarindex'
+    restart: always
+    depends_on:
+      - mongo
 
   mongo:
     image: mongo:latest

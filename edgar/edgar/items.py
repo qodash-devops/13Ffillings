@@ -27,3 +27,12 @@ class StockInfoItem(scrapy.Item):
     cusip=scrapy.Field()
     ticker=scrapy.Field()
     exchange=scrapy.Field()
+
+
+class PageIndexItem(scrapy.Item):
+    index=scrapy.Field()
+    quarter=scrapy.Field()
+    day=scrapy.Field()
+    year=scrapy.Field()
+    filings=scrapy.Field()
+    n_filings=scrapy.Field()
