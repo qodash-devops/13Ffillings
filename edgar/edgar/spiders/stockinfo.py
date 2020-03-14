@@ -2,8 +2,7 @@ import scrapy
 import os
 from ..items import StockInfoItem
 import pymongo
-import json
-import re
+from random import sample
 mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 client = pymongo.MongoClient(mongo_uri)
 db = client['edgar']
@@ -15,6 +14,7 @@ filings=db['filings_13f']
 class QuantumonlineSpider(scrapy.Spider):
     name = 'stockinfo'
     allowed_domains = ['quantumonline.com']
+    batch_size=5000
     # start_urls = ['https://www.quantumonline.com/search.cfm']
 
     def _get_missing_cusips(self):
@@ -28,8 +28,10 @@ class QuantumonlineSpider(scrapy.Spider):
 
     def start_requests(self):
         missing_cusips=self._get_missing_cusips()
+        n_missing=len(missing_cusips)
+        missing_cusips=sample(missing_cusips,self.batch_size)
         if len(missing_cusips)>100:
-            self.logger.warning(f'loading {len(missing_cusips)} cusips')
+            self.logger.warning(f'loading {len(missing_cusips)} cusips , ({n_missing}) total missing')
         for c in missing_cusips:
             h={"Content-Type":"application/x-www-form-urlencoded"}
             request=scrapy.FormRequest(url='https://www.quantumonline.com/search.cfm',formdata={"sopt":"cusip","tickersymbol":c},headers=h,callback=self.parse_cusip)
