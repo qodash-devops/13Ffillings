@@ -94,14 +94,14 @@ def update_position(p,fetch_yahoo=True):
 def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
-def update_all(batch_size=1000):
+def update_all(batch_size=1000,fetch=False):
     logger.info('Getting positions count...')
     n_positions=positions.count_documents({})
     n_existing=positions_recap.count_documents({})
     n_missing=n_positions-n_existing
     logger.warning(f'{n_missing} missing positions')
     for i in tqdm(range(int(n_missing/batch_size)),position=0,desc='Total',leave=False):
-        update_positions_view_batch(batch_size=batch_size)
+        update_positions_view_batch(batch_size=batch_size,fetch=fetch)
 
 if __name__ == '__main__':
     Fire({'all':update_all,'batch':update_positions_view_batch})
