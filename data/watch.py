@@ -85,4 +85,4 @@ def update_mproc(n_proc=1,batch_size=100000):
 
 
 if __name__ == '__main__':
-    update_mproc(5)
+    update_mproc(3)
