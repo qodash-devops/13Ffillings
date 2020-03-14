@@ -12,6 +12,7 @@ def run_crawler(crawler="edgar"):
     settings_module_path = os.environ['SCRAPY_SETTINGS_MODULE']
     settings.setmodule(settings_module_path, priority='project')
     settings=get_project_settings()
+    settings.set('JOBDIR', '/var/tmp/scrapy/' + crawler)
     process = CrawlerProcess(settings)
     process.crawl(crawler)
     process.start()
