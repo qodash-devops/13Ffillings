@@ -13,7 +13,7 @@ filings=db['filings_13f']
 
 
 class QuantumonlineSpider(scrapy.Spider):
-    name = 'quantumonline'
+    name = 'stockinfo'
     allowed_domains = ['quantumonline.com']
     # start_urls = ['https://www.quantumonline.com/search.cfm']
 
@@ -44,7 +44,7 @@ class QuantumonlineSpider(scrapy.Spider):
             exchange=tmp.split('\xa0')[-1].strip('</b>').split(':')[1].strip()
             i=StockInfoItem()
             i['cusip']=cusip
-            i['ticker']=ticker
+            i['ticker']=ticker.replace('*','')
             i['exchange']=exchange
             yield i
         except:

@@ -26,7 +26,19 @@ services:
     restart: always
     depends_on:
       - mongo
-
+  stockinfo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    command: "python /crawler/edgar/crawler-go.py stockinfo   "
+    environment:
+      - 'CRAWL_YEARS=2018,2019,2020'
+      - 'MONGO_URI=mongodb://13fmongo:27017'
+    volumes:
+      - '/home/docker/edgar/crawler/jobdir/indexer:/var/tmp/edgarindex'
+    restart: always
+    depends_on:
+      - mongo
   mongo:
     image: mongo:latest
     container_name: 13fmongo
