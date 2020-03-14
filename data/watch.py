@@ -109,7 +109,7 @@ def update_all(batch_size=1000,fetch=False,nthreads=5):
 
     if nthreads>0:
         batches=[(batch_size,i) for i in range(int(n_missing/batch_size))]
-        run_threaded(update_positions_view_batch,batches)
+        run_threaded(update_positions_view_batch,batches,pool_size=nthreads)
     else:
         for i in tqdm(range(int(n_missing/batch_size)),position=0,desc='Total',leave=False):
             update_positions_view_batch(batch_size=batch_size,fetch=fetch)
