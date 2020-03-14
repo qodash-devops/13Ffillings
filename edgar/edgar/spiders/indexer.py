@@ -32,7 +32,7 @@ class EdgarIndexSpider(scrapy.Spider):
                 url = f'https://www.sec.gov/Archives/edgar/daily-index/{y}/{q}/'
                 urls.append(url)
         for url in urls:
-            yield scrapy.Request(url=url, callback=self.parse_quarter)
+            yield scrapy.Request(url=url, callback=self.parse_quarter,dont_filter=True)
 
 
     def parse_quarter(self, response):
@@ -41,7 +41,7 @@ class EdgarIndexSpider(scrapy.Spider):
             link_url = l.attrib['href']
             if ('form.' in link_url and '.idx' in link_url):
                 next_page = response.urljoin(link_url)
-                yield scrapy.Request(next_page, callback=self.parse_daily)
+                yield response.follow(next_page, callback=self.parse_daily,dont_filter=True)
 
 
     def parse_daily(self, response):
