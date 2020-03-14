@@ -3,7 +3,7 @@ import os,pymongo
 import logging
 from tqdm import tqdm,trange
 from datetime import timedelta
-from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 import warnings
 from fire import Fire
 import pandas as pd
@@ -100,7 +100,6 @@ def nearest(items, pivot):
     return min(items, key=lambda x: abs(x - pivot))
 
 def update_all(batch_size=1000,fetch=False,nthreads=5):
-    batch_size=int(batch_size)
     logger.info('Getting positions count...')
     n_positions=positions.count_documents({})
     n_existing=positions_recap.count_documents({})
@@ -116,7 +115,7 @@ def update_all(batch_size=1000,fetch=False,nthreads=5):
             update_positions_view_batch(batch_size=batch_size,fetch=fetch)
 
 def run_threaded(f, my_iter,pool_size=4):
-    with ThreadPoolExecutor(pool_size) as executor:
+    with ProcessPoolExecutor(pool_size) as executor:
         results = list(tqdm(executor.map(f, my_iter),desc='Total', total=len(my_iter)))
     return results
 
