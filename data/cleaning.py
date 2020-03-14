@@ -26,7 +26,7 @@ def remove_duplicate_index():
             #duplicate urls
             r['filings']=list(set(r['filings']))
             index.update({'_id':r['_id']},r)
-    assert len(all_urls)==len(set(all_urls))
+    print(f'n_urls={len(all_urls)} , n unique={len(set(all_urls))}')
 
 
 if __name__ == '__main__':
