@@ -1,5 +1,4 @@
-conn = new Mongo();
-db = conn.getDB("edgar");
+conn = new Mongo();db = conn.getDB("edgar");
 
 var updateStockPositions=function(){
     db.filings_13f.aggregate([
@@ -38,4 +37,4 @@ var updateStockPositions=function(){
 
 };
 db.system.js.save({_id:"updateStockPositions",value:updateStockPositions})
-updateStockPositions();
+//updateStockPositions();
