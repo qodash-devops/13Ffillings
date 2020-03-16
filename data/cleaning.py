@@ -52,9 +52,24 @@ def clean_positions():
         filings.update({"_id":f['_id']},f)
 
 
-
+def clean_stock_info():
+    stock_info=db['stock_info']
+    res=stock_info.find({},batch_size=1000)
+    bar=tqdm(res,desc='stock_info',total=res.count())
+    for info in bar:
+        if "info" in info.keys():
+            info['market_cap']=info['info']['marketCap']
+            info['sector']=info['info']['sector']
+            info['volume']=info['info']['averageDailyVolume10Day']
+            for i in range(len(info['close'])):
+                if type(info['close'][i]['Date'])==str:
+                    info['close'][i]['Date']=datetime.strptime(info['close'][i]['Date'],'%Y-%m-%d')
+            stock_info.update({"_id":info["_id"]},info)
+        else:
+            logger.warning(f'No info for id_{input(["_id"])}: {info}')
 
 if __name__ == '__main__':
     Fire({'index':remove_duplicate_index,
-          'positions':clean_positions
+          'positions':clean_positions,
+          'info':clean_stock_info
           })
