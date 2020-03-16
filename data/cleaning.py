@@ -39,9 +39,15 @@ def clean_positions():
     res=filings.find({},batch_size=1000)
     bar=tqdm(res,desc='filings',total=res.count())
     for f in bar:
-        f['quarter_date']=datetime.strptime(f['quarter_date'],'%m-%d-%Y')
+        if type(f['quarter_date'])==str:
+            f['quarter_date']=datetime.strptime(f['quarter_date'],'%m-%d-%Y')
+        elif not isinstance(f['quarter_date'],datetime):
+            logger.error(f'filing {f["_id"]} quarter_date error!')
         for i in range(len(f['positions'])):
-            f['positions'][i]['quantity']=float(f['positions'][i]['quantity'].strip())
+            if type(f['positions'][i]['quantity'])==str:
+                f['positions'][i]['quantity']=float(f['positions'][i]['quantity'].strip())
+            elif type(f['positions'][i]['quantity'])!=float:
+                logger.error(f'Position {i} for filing {f["_id"]}:type of quantity!')
             f['positions'][i]['_id']=ObjectId()
         filings.update({"_id":f['_id']},f)
 
