@@ -54,19 +54,19 @@ def clean_positions():
 
 def clean_stock_info():
     stock_info=db['stock_info']
-    res=stock_info.find({},batch_size=1000)
+    res=stock_info.find({},batch_size=100)
     bar=tqdm(res,desc='stock_info',total=res.count())
     for info in bar:
         if "info" in info.keys():
             info['market_cap']=info['info']['marketCap']
-            info['sector']=info['info']['sector']
-            info['volume']=info['info']['averageDailyVolume10Day']
+            info['sector']=info['info'].get('sector','')
+            info['volume']=info['info'].get('averageDailyVolume10Day',0)
             for i in range(len(info['close'])):
                 if type(info['close'][i]['Date'])==str:
                     info['close'][i]['Date']=datetime.strptime(info['close'][i]['Date'],'%Y-%m-%d')
             stock_info.update({"_id":info["_id"]},info)
         else:
-            logger.warning(f'No info for id_{input(["_id"])}: {info}')
+            pass
 
 if __name__ == '__main__':
     Fire({'index':remove_duplicate_index,
