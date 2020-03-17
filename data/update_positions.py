@@ -38,12 +38,17 @@ def update_positions_collection(output_col='positions_stockinfo'):
                                    "as": "stock_info"}}
                             ])
     bar = tqdm(res, desc='filings', total=n_filigs)
+    quarter_indices={}
     @profile
     def get_info(p):
         try:
             res={'quantity':p['quantity'],'cusip':p['cusip'],'ticker':p['ticker'],
                  'filer_name':f['filer_name'],'quarter_date':f['quarter_date'],'_id':p['_id_x']}
-            quarter_idx=np.argmin(abs(np.array([pp['Date'] for pp in p['close']])-f['quarter_date']))
+            try:
+                quarter_idx=quarter_indices[res['cusip']]
+            except:
+                quarter_idx=np.argmin(abs(np.array([pp['Date'] for pp in p['close']])-f['quarter_date']))
+                quarter_indices[res['cusip']]=quarter_idx
             init_s=p['close'][quarter_idx]['Close']
             prev_s=p['close'][max(quarter_idx-64,0)]['Close']
             next_s=p['close'][min(quarter_idx+64,len(p['close'])-1)]['Close']
