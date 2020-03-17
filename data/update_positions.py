@@ -64,9 +64,13 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
         except:
             p['q_rel_volume']=np.nan
         return p
+    i=0
     for f in bar:
+        if i>100:
+            break
         p=pd.DataFrame(f['positions'])
         p=p.apply(get_info,axis=1)
+        i+=1
         # close=pd.DataFrame(i['close'])
         # quarter_idx=np.argmin(abs(close['Date']-f['quarter_date']))
         # init_s=close.iloc[quarter_idx]['Close']
