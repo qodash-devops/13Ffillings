@@ -60,8 +60,6 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
                 else:
                     pass
                     # logger.warning(f'No spot for cusip={p["cusip"]}')
-        print(f)
-        pass
 
 
 if __name__ == '__main__':
