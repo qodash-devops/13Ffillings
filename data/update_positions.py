@@ -2,7 +2,7 @@ import os,pymongo
 import logging
 from tqdm import tqdm
 from datetime import timedelta,datetime
-import pandas as pd
+import modin.pandas as pd
 import numpy as np
 import warnings
 import colorlog
