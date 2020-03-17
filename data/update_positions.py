@@ -38,37 +38,39 @@ def update_positions_collection(output_col='positions_stockinfo'):
                                    "as": "stock_info"}}
                             ])
     bar = tqdm(res, desc='filings', total=n_filigs)
-    @profile
+    # @profile
     def get_info(p):
         try:
+            res={'quantity':p['quantity'],'cusip':p['cusip'],'ticker':p['ticker'],
+                 'filer_name':f['filer_name'],'quarter_date':f['quarter_date'],'_id':p['_id_x']}
             quarter_idx=np.argmin(abs(np.array([pp['Date'] for pp in p['close']])-f['quarter_date']))
             init_s=p['close'][quarter_idx]['Close']
             prev_s=p['close'][max(quarter_idx-64,0)]['Close']
             next_s=p['close'][min(quarter_idx+64,len(p['close'])-1)]['Close']
-            p['prev_q_return']=init_s/prev_s-1
-            p['next_q_return']=next_s/init_s-1
+            res['prev_q_return']=init_s/prev_s-1
+            res['next_q_return']=next_s/init_s-1
         except:
-            p['prev_q_return']=np.nan
-            p['next_q_return'] = np.nan
+            res['prev_q_return']=np.nan
+            res['next_q_return'] = np.nan
         try:
-            p['spot']=init_s
-            p['spot_date']=p['close'][quarter_idx]['Date']
+            res['spot']=init_s
+            res['spot_date']=p['close'][quarter_idx]['Date']
         except:
-            p['spot']=np.nan
-            p['spot_date']=np.nan
+            res['spot']=np.nan
+            res['spot_date']=np.nan
         try:
-            p['q_rel_capi']=p['quantity']/p['market_cap']*100
+            res['q_rel_capi']=p['quantity']/p['market_cap']*100
         except:
-            p['q_rel_capi']=np.nan
+            res['q_rel_capi']=np.nan
         try:
-            p['q_rel_volume']=p['quantity']/p['volume']*100
+            res['q_rel_volume']=p['quantity']/p['volume']*100
         except:
-            p['q_rel_volume']=np.nan
+            res['q_rel_volume']=np.nan
         try:
-            p['sector']=p['info']['sector']
+            res['sector']=p['info']['sector']
         except:
-            p['sector']=np.nan
-        return p
+            res['sector']=np.nan
+        return res
     iter=0
     for f in bar:
         if iter>100:
@@ -77,12 +79,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
         i=pd.DataFrame(f['stock_info'])
         try:
             pos=pd.merge(pos,i,on='cusip')
-            pos=pos.apply(get_info,axis=1)
-            pos_list=pos[['cusip','sector','ticker','quantity','spot','spot_date','prev_q_return','next_q_return','q_rel_capi','q_rel_volume']]
-            pos_list['filer_name']=f['filer_name']
-            pos_list['quarter_date']=f['quarter_date']
-            pos_list['_id']=p['_id_x']
-            pos_list=pos_list.to_dict(orient='records')
+            pos_list=pos.apply(get_info,axis=1)
             updates=[pymongo.ReplaceOne({'_id':pos['_id']},pos,upsert=True) for pos in pos_list]
             positions.bulk_write(updates)
         except:
