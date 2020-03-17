@@ -34,7 +34,11 @@ def remove_duplicate_index():
             index.update({'_id':r['_id']},r)
     print(f'n_urls={len(all_urls)} , n unique={len(set(all_urls))}')
 
-def clean_positions():
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+def clean_positions(max_positions_split=1000):
     filings=db['filings_13f']
     res=filings.find({},batch_size=1000)
     bar=tqdm(res,desc='filings',total=res.count())
@@ -49,7 +53,15 @@ def clean_positions():
             elif type(f['positions'][i]['quantity'])!=float:
                 logger.error(f'Position {i} for filing {f["_id"]}:type of quantity!')
             f['positions'][i]['_id']=ObjectId()
-        filings.update({"_id":f['_id']},f)
+        if len(f['positions'])>max_positions_split:
+            filings.delete_one({'_id':f['_id']})
+            for positions in chunks(f['positions'],max_positions_split):
+                nf={k:v for k,v in f.items() if k!='positions'}
+                nf['positions']=positions
+                nf['_id']=ObjectId()
+                filings.insert(nf)
+        else:
+            filings.update({"_id":f['_id']},f)
 
 
 def clean_stock_info():

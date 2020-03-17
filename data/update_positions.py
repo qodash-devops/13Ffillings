@@ -27,14 +27,13 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
     past_info={}
     db.drop_collection(output_col)
     positions=db[output_col]
-    res=filings.find(filter_dict,batch_size=100)
-    # res=filings.aggregate([ {"$unwind":"$positions"},
-    #                         {"$lookup": {
-    #                                "from": "stock_info",
-    #                                "localField": "positions.cusip",
-    #                                "foreignField": "cusip",
-    #                                "as": "stock_info"}},{"$count":'_id'}
-    #                         ])
+    # res=filings.find(filter_dict,batch_size=100)
+    res=filings.aggregate([{"$lookup": {
+                                   "from": "stock_info",
+                                   "localField": "positions.cusip",
+                                   "foreignField": "cusip",
+                                   "as": "stock_info"}},{"$count":'_id'}
+                            ])
     bar = tqdm(res, desc='filings', total=res.count())
     def get_info(p):
         cusip=p['cusip']
@@ -44,25 +43,25 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
         except:
             past_info[cusip]=info.find_one({"cusip":cusip})
             i=past_info[cusip]
-        try:
-            close = pd.DataFrame(i['close'])
-            quarter_idx=np.argmin(abs(close['Date']-f['quarter_date']))
-            init_s=close.iloc[quarter_idx]['Close']
-            prev_s=close.iloc[max(quarter_idx-64,0)]['Close']
-            next_s=close.iloc[min(quarter_idx+64,len(close)-1)]['Close']
-            p['prev_q_return']=init_s/prev_s-1
-            p['next_q_return']=next_s/init_s-1
-        except:
-            p['prev_q_return']=np.nan
-            p['next_q_return'] = np.nan
-        try:
-            p['q_rel_capi']=p['quantity']/i['market_cap']*100
-        except:
-            p['q_rel_capi']=np.nan
-        try:
-            p['q_rel_volume']=p['quantity']/i['volume']*100
-        except:
-            p['q_rel_volume']=np.nan
+        # try:
+        #     close = pd.DataFrame(i['close'])
+        #     quarter_idx=np.argmin(abs(close['Date']-f['quarter_date']))
+        #     init_s=close.iloc[quarter_idx]['Close']
+        #     prev_s=close.iloc[max(quarter_idx-64,0)]['Close']
+        #     next_s=close.iloc[min(quarter_idx+64,len(close)-1)]['Close']
+        #     p['prev_q_return']=init_s/prev_s-1
+        #     p['next_q_return']=next_s/init_s-1
+        # except:
+        #     p['prev_q_return']=np.nan
+        #     p['next_q_return'] = np.nan
+        # try:
+        #     p['q_rel_capi']=p['quantity']/i['market_cap']*100
+        # except:
+        #     p['q_rel_capi']=np.nan
+        # try:
+        #     p['q_rel_volume']=p['quantity']/i['volume']*100
+        # except:
+        #     p['q_rel_volume']=np.nan
         return p
     i=0
     for f in bar:
