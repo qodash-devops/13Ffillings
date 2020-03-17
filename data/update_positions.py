@@ -39,7 +39,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
                             ])
     bar = tqdm(res, desc='filings', total=n_filigs)
     quarter_indices={}
-    @profile
+    # @profile
     def get_info(p):
         try:
             res={'quantity':p['quantity'],'cusip':p['cusip'],'ticker':p['ticker'],
@@ -78,7 +78,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
         return res
     iter=0
     for f in bar:
-        if iter>5000:
+        if iter>1000:
             break
         pos=pd.DataFrame(f['positions'])
         i=pd.DataFrame(f['stock_info'])
