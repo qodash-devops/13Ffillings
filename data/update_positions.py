@@ -36,10 +36,15 @@ def update_positions_collection(output_col='positions_stockinfo'):
                                    "as": "stock_info"}}
                             ])
     bar = tqdm(res, desc='filings', total=n_filigs)
+    close_stocks={}
     @profile
     def get_info(p):
         try:
-            close = pd.DataFrame(p['close'])
+            try:
+                close=close_stocks[p['cusip']]
+            except:
+                close = pd.DataFrame(p['close'])
+                close_stocks[p['cusip']]
             quarter_idx=np.argmin(abs(close['Date']-f['quarter_date']))
             init_s=close.iloc[quarter_idx]['Close']
             prev_s=close.iloc[max(quarter_idx-64,0)]['Close']
@@ -70,7 +75,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
         return p
     iter=0
     for f in bar:
-        if iter>100:
+        if iter>200:
             break
         p=pd.DataFrame(f['positions'])
         i=pd.DataFrame(f['stock_info'])
