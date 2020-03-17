@@ -56,8 +56,7 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
                         p['q_rel_volume']=p['quantity']/i['volume']*100
                     except:
                         pass
-                    positions.update({'_id':p['_id']},p,upsert=True)
-
+                    res=positions.update({'_id':p['_id']},p,upsert=True)
                 else:
                     pass
                     # logger.warning(f'No spot for cusip={p["cusip"]}')
