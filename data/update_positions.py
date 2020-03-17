@@ -2,13 +2,15 @@ import os,pymongo
 import logging
 from tqdm import tqdm
 from datetime import timedelta,datetime
-import modin.pandas as pd
+import pandas as pd
 import numpy as np
 import warnings
 import colorlog
 warnings.simplefilter("ignore")
 from fire import Fire
 from bson.objectid import ObjectId
+
+# os.environ["MODIN_ENGINE"] = "ray"
 
 handler = colorlog.StreamHandler()
 handler.setFormatter(colorlog.ColoredFormatter('%(log_color)s[%(asctime)s - %(levelname)s]:%(message)s'))
@@ -36,19 +38,13 @@ def update_positions_collection(output_col='positions_stockinfo'):
                                    "as": "stock_info"}}
                             ])
     bar = tqdm(res, desc='filings', total=n_filigs)
-    close_stocks={}
     @profile
     def get_info(p):
         try:
-            try:
-                close=close_stocks[p['cusip']]
-            except:
-                close = pd.DataFrame(p['close'])
-                close_stocks[p['cusip']]
-            quarter_idx=np.argmin(abs(close['Date']-f['quarter_date']))
-            init_s=close.iloc[quarter_idx]['Close']
-            prev_s=close.iloc[max(quarter_idx-64,0)]['Close']
-            next_s=close.iloc[min(quarter_idx+64,len(close)-1)]['Close']
+            quarter_idx=np.argmin(abs(np.array([pp['Date'] for pp in p['close']])-f['quarter_date']))
+            init_s=p['close'][quarter_idx]['Close']
+            prev_s=p['close'][max(quarter_idx-64,0)]['Close']
+            next_s=p['close'][min(quarter_idx+64,len(p['close'])-1)]['Close']
             p['prev_q_return']=init_s/prev_s-1
             p['next_q_return']=next_s/init_s-1
         except:
@@ -56,7 +52,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
             p['next_q_return'] = np.nan
         try:
             p['spot']=init_s
-            p['spot_date']=close.index[quarter_idx]
+            p['spot_date']=p['close'][quarter_idx]['Date']
         except:
             p['spot']=np.nan
             p['spot_date']=np.nan
@@ -77,12 +73,12 @@ def update_positions_collection(output_col='positions_stockinfo'):
     for f in bar:
         if iter>100:
             break
-        p=pd.DataFrame(f['positions'])
+        pos=pd.DataFrame(f['positions'])
         i=pd.DataFrame(f['stock_info'])
         try:
-            p=pd.merge(p,i,on='cusip')
-            p=p.apply(get_info,axis=1)
-            pos_list=p[['cusip','sector','ticker','quantity','spot','spot_date','prev_q_return','next_q_return','q_rel_capi','q_rel_volume']]
+            pos=pd.merge(pos,i,on='cusip')
+            pos=pos.apply(get_info,axis=1)
+            pos_list=pos[['cusip','sector','ticker','quantity','spot','spot_date','prev_q_return','next_q_return','q_rel_capi','q_rel_volume']]
             pos_list['filer_name']=f['filer_name']
             pos_list['quarter_date']=f['quarter_date']
             pos_list['_id']=p['_id_x']
