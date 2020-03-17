@@ -66,7 +66,7 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
         return p
     i=0
     for f in bar:
-        if i>100:
+        if i>20:
             break
         p=pd.DataFrame(f['positions'])
         p=p.apply(get_info,axis=1)
