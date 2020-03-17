@@ -22,7 +22,7 @@ mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 client = pymongo.MongoClient(mongo_uri)
 db = client['edgar']
 index=db['page_index']
-
+@profile
 def update_positions_collection(output_col='positions_stockinfo'):
     filings=db['filings_13f']
     info=db['stock_info']
