@@ -39,14 +39,27 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
     for f in bar:
         for p in f['positions']:
             i=get_info(p['cusip'])
-            if len(i['close'])>0:
-                close=pd.DataFrame(i['close'])
-                quarter_idx=np.argmin(abs(close['Date']-f['quarter_date']))
-                init_s=close.iloc
+            if not i is None:
+                if len(i['close'])>0:
+                    close=pd.DataFrame(i['close'])
+                    quarter_idx=np.argmin(abs(close['Date']-f['quarter_date']))
+                    init_s=close.iloc[quarter_idx]['Close']
+                    prev_s=close.iloc[quarter_idx-64]['Close']
+                    next_s=close.iloc[min(quarter_idx+64,len(close)-1)]['Close']
+                    p['prev_q_return']=init_s/prev_s-1
+                    p['next_q_return']=next_s/init_s-1
+                    try:
+                        p['q_rel_capi']=p['quantity']/i['market_cap']*100
+                    except:
+                        pass
+                    try:
+                        p['q_rel_volume']=p['quantity']/i['volume']*100
+                    except:
+                        pass
+                    positions.update({'_id':p['_id']},p,upsert=True)
 
-
-            else:
-                logger.warning(f'No spot for cusip={p["cusip"]}')
+                else:
+                    logger.warning(f'No spot for cusip={p["cusip"]}')
         print(f)
         pass
 
