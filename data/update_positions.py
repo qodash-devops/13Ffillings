@@ -36,6 +36,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
                                    "as": "stock_info"}}
                             ])
     bar = tqdm(res, desc='filings', total=n_filigs)
+    @profile
     def get_info(p):
         try:
             close = pd.DataFrame(p['close'])
@@ -67,7 +68,10 @@ def update_positions_collection(output_col='positions_stockinfo'):
         except:
             p['sector']=np.nan
         return p
+    iter=0
     for f in bar:
+        if iter>100:
+            break
         p=pd.DataFrame(f['positions'])
         i=pd.DataFrame(f['stock_info'])
         try:
@@ -82,6 +86,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
             positions.bulk_write(updates)
         except:
             pass
+        iter+=1
 
 
 if __name__ == '__main__':
