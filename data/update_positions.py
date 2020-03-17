@@ -29,7 +29,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
     past_info={}
     db.drop_collection(output_col)
     positions=db[output_col]
-    res=filings.find({},batch_size=1000)
+    res=filings.find({},batch_size=10000)
     n_filigs=res.count()
     res=filings.aggregate([{"$lookup": {
                                    "from": "stock_info",
