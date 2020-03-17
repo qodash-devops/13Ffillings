@@ -38,7 +38,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
                                    "as": "stock_info"}}
                             ])
     bar = tqdm(res, desc='filings', total=n_filigs)
-    # @profile
+    @profile
     def get_info(p):
         try:
             res={'quantity':p['quantity'],'cusip':p['cusip'],'ticker':p['ticker'],
