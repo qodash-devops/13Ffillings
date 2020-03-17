@@ -70,15 +70,18 @@ def update_positions_collection(output_col='positions_stockinfo'):
     for f in bar:
         p=pd.DataFrame(f['positions'])
         i=pd.DataFrame(f['stock_info'])
-        p=pd.merge(p,i,on='cusip')
-        p=p.apply(get_info,axis=1)
-        pos_list=p[['cusip','sector','ticker','quantity','spot','spot_date','prev_q_return','next_q_return','q_rel_capi','q_rel_volume']]
-        pos_list['filer_name']=f['filer_name']
-        pos_list['quarter_date']=f['quarter_date']
-        pos_list['_id']=p['_id_x']
-        pos_list=pos_list.to_dict(orient='records')
-        updates=[pymongo.ReplaceOne({'_id':pos['_id']},pos,upsert=True) for pos in pos_list]
-        positions.bulk_write(updates)
+        try:
+            p=pd.merge(p,i,on='cusip')
+            p=p.apply(get_info,axis=1)
+            pos_list=p[['cusip','sector','ticker','quantity','spot','spot_date','prev_q_return','next_q_return','q_rel_capi','q_rel_volume']]
+            pos_list['filer_name']=f['filer_name']
+            pos_list['quarter_date']=f['quarter_date']
+            pos_list['_id']=p['_id_x']
+            pos_list=pos_list.to_dict(orient='records')
+            updates=[pymongo.ReplaceOne({'_id':pos['_id']},pos,upsert=True) for pos in pos_list]
+            positions.bulk_write(updates)
+        except:
+            pass
 
 
 if __name__ == '__main__':
