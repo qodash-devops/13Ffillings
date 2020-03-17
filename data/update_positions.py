@@ -44,7 +44,7 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
                     close=pd.DataFrame(i['close'])
                     quarter_idx=np.argmin(abs(close['Date']-f['quarter_date']))
                     init_s=close.iloc[quarter_idx]['Close']
-                    prev_s=close.iloc[quarter_idx-64]['Close']
+                    prev_s=close.iloc[max(quarter_idx-64,0)]['Close']
                     next_s=close.iloc[min(quarter_idx+64,len(close)-1)]['Close']
                     p['prev_q_return']=init_s/prev_s-1
                     p['next_q_return']=next_s/init_s-1
