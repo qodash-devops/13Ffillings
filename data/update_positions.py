@@ -59,7 +59,8 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
                     positions.update({'_id':p['_id']},p,upsert=True)
 
                 else:
-                    logger.warning(f'No spot for cusip={p["cusip"]}')
+                    pass
+                    # logger.warning(f'No spot for cusip={p["cusip"]}')
         print(f)
         pass
 
