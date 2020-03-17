@@ -38,7 +38,7 @@ def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
     for i in range(0, len(lst), n):
         yield lst[i:i + n]
-def clean_positions(max_positions_split=1000):
+def clean_positions(max_positions_split=100):
     filings=db['filings_13f']
     res=filings.find({},batch_size=1000)
     bar=tqdm(res,desc='filings',total=res.count())
