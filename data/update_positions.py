@@ -78,7 +78,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
         return res
     iter=0
     for f in bar:
-        if iter>1000:
+        if iter>5000:
             break
         pos=pd.DataFrame(f['positions'])
         i=pd.DataFrame(f['stock_info'])
