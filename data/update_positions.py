@@ -75,7 +75,7 @@ def update_positions_collection(output_col='positions_stockinfo'):
         return p
     iter=0
     for f in bar:
-        if iter>200:
+        if iter>100:
             break
         p=pd.DataFrame(f['positions'])
         i=pd.DataFrame(f['stock_info'])
