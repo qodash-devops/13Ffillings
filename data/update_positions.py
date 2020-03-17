@@ -27,7 +27,7 @@ def update_positions_collection(filter_dict={},output_col='positions_stockinfo')
     past_info={}
     db.drop_collection(output_col)
     positions=db[output_col]
-    res=filings.find(filter_dict,batch_size=100)
+    res=filings.find(filter_dict,batch_size=1000)
     bar = tqdm(res, desc='filings', total=res.count())
     def get_info(cusip):
         try:
