@@ -47,11 +47,6 @@ services:
      - /home/docker/13f/mongo/data/db:/data/db
     ports:
       - 27020:27017
-
-  redis:
-    image: redis:latest
-    ports:
-    - 6379:6379
   metabase:
     image: metabase/metabase
     container_name: edgar-metabase
