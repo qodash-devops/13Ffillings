@@ -22,14 +22,14 @@ mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 client = pymongo.MongoClient(mongo_uri)
 db = client['edgar']
 index=db['page_index']
-@profile
+# @profile
 def update_positions_collection(output_col='positions_stockinfo'):
     filings=db['filings_13f']
     info=db['stock_info']
     past_info={}
     db.drop_collection(output_col)
     positions=db[output_col]
-    res=filings.find({},batch_size=10000)
+    res=filings.find({},batch_size=1000)
     n_filigs=res.count()
     res=filings.aggregate([{"$lookup": {
                                    "from": "stock_info",
