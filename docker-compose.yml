@@ -21,9 +21,6 @@ services:
     environment:
       - 'CRAWL_YEARS=2018,2019,2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
-#    volumes:
-#      - '/home/docker/edgar/crawlers/jobdir/indexer:/var/tmp/scrapy/edgarindex'
-    restart: always
     depends_on:
       - mongo
   stockinfo:
