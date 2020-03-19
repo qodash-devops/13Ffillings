@@ -10,8 +10,6 @@ services:
 #    volumes:
 #      - '/home/docker/edgar/crawlers/jobdir/edgarfilings:/var/tmp/scrapy/edgarfilings'
     restart: always
-    ports:
-    - 6023:6023
     depends_on:
       - mongo
   filingindexer:
