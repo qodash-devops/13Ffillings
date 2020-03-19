@@ -69,7 +69,8 @@ class EdgarPipeline(object):
 
             except:
                 print('Error inserting item==>'+str(sys.exc_info()))
-        return item
+        i={}
+        # return item
 
 
     def get_spots(self,ticker):
