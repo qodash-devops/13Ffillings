@@ -2,6 +2,12 @@ import yfinance as yf
 import pymongo
 import sys
 
+def chunks(lst, n):
+    """Yield successive n-sized chunks from lst."""
+    for i in range(0, len(lst), n):
+        yield lst[i:i + n]
+
+
 class EdgarPipeline(object):
     collection_name = 'filings_13f'
     collection_stock_info='stock_info'
@@ -46,8 +52,19 @@ class EdgarPipeline(object):
                 key = {'docurl': i['docurl']}
                 if len(item['positions'])==0:
                     self.db[self.collection_empty].update(key, i, upsert=True)
-                else:
+                elif len(item['positions'])<1000:
                     self.db[self.collection_name].update(key, i, upsert=True)
+                else:
+                    positions_split=chunks(item['positions'],1000)
+                    url=item['docurl']
+                    idx=1
+                    for p in positions_split:
+                        i['positions']=p
+                        i['docurl']=url+f'_part_{idx}'
+                        self.db[self.collection_name].update(key, i, upsert=True)
+                        idx+=1
+
+
             except:
                 print('Error inserting item==>'+str(sys.exc_info()))
         return item
