@@ -16,7 +16,7 @@ class QuantumonlineSpider(scrapy.Spider):
     allowed_domains = ['quantumonline.com']
     batch_size=5000
     # start_urls = ['https://www.quantumonline.com/search.cfm']
-
+    custom_settings = {'DELTAFETCH_ENABLED': False,'JOBDIR':''}
     def _get_missing_cusips(self):
         self.logger.info('Loading missing cusips from mongo...')
         filings.ensure_index([("positions.cusip", pymongo.DESCENDING)])
