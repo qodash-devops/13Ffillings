@@ -58,10 +58,12 @@ class EdgarPipeline(object):
                     positions_split=chunks(item['positions'],1000)
                     url=item['docurl']
                     idx=1
+                    del i['positions']
+                    self.db[self.collection_name].update({'docurl': i['docurl']}, i, upsert=True)
                     for p in positions_split:
                         i['positions']=p
                         i['docurl']=url+f'_part_{idx}'
-                        self.db[self.collection_name].update(key, i, upsert=True)
+                        self.db[self.collection_name].update({'docurl': i['docurl']}, i, upsert=True)
                         idx+=1
 
 
