@@ -14,16 +14,18 @@ CONCURRENT_REQUESTS_PER_IP=50
 MEMUSAGE_ENABLED=True
 COOKIES_ENABLED=False
 MEMUSAGE_LIMIT_MB=5000
-# ...
-# Configure item pipelines
-# See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
-ITEM_PIPELINES = {
-    'edgar.pipelines.EdgarPipeline': 300
-}
 
 MONGO_URI=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 MONGO_DATABASE = 'edgar'
 
+ITEM_PIPELINES = {
+    'edgar.pipelines.EdgarPipeline': 300
+}
+
+EXTENSIONS = {
+    'edgar.extensions.LogStats': 100,
+    'scrapy.extensions.corestats.LogStats':None
+}
 
 LOG_LEVEL = 'INFO'
 LOG_FORMAT = '%(levelname)s: %(message)s'
@@ -34,6 +36,9 @@ SPIDER_MIDDLEWARES = {
     'scrapy_deltafetch.DeltaFetch': 100,
 }
 DELTAFETCH_ENABLED = True
+
+
+
 
 
 color_formatter = ColoredFormatter(
