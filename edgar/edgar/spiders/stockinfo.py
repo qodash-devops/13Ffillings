@@ -41,14 +41,24 @@ class QuantumonlineSpider(scrapy.Spider):
 
     def parse_cusip(self, response,cusip):
         try:
-            tmp=response.xpath("//*[contains(text(), 'Ticker Symbol:')]").get()
-            ticker=tmp.split('\xa0')[0].split(':')[1].strip()
-            exchange=tmp.split('\xa0')[-1].strip('</b>').split(':')[1].strip()
-            i=StockInfoItem()
-            i['cusip']=cusip
-            i['ticker']=ticker.replace('*','')
-            i['exchange']=exchange
-            yield i
+            notFound=response.xpath("//*[contains(text(), 'Not Found!')]").get()
+            if notFound is None:
+                tmp=response.xpath("//*[contains(text(), 'Ticker Symbol:')]").get()
+                ticker=tmp.split('\xa0')[0].split(':')[1].strip()
+                exchange=tmp.split('\xa0')[-1].strip('</b>').split(':')[1].strip()
+                i=StockInfoItem()
+                i['cusip']=cusip
+                i['ticker']=ticker.replace('*','')
+                i['exchange']=exchange
+                i['status']='OK'
+                yield i
+            else:
+                i = StockInfoItem()
+                i['cusip'] = cusip
+                i['ticker'] = ''
+                i['exchange'] = ''
+                i['status'] = 'NOTFOUND'
+                yield i
+
         except:
             pass
-            # self.logger.info(f"No result Getting cusip:{cusip}")

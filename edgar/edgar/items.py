@@ -27,6 +27,7 @@ class StockInfoItem(scrapy.Item):
     cusip=scrapy.Field()
     ticker=scrapy.Field()
     exchange=scrapy.Field()
+    status=scrapy.Field()
 
 
 class PageIndexItem(scrapy.Item):
