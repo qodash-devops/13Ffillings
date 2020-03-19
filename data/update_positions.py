@@ -28,7 +28,7 @@ def process_filing(f,db):
     def get_info(p):
         try:
             res={'quantity':p['quantity'],'cusip':p['cusip'],'ticker':p['ticker'],
-                 'filer_name':f['filer_name'],'quarter_date':f['quarter_date'],'_id':p['_id_x']}
+                 'filer_name':f['filer_name'],'quarter_date':f['quarter_date'],'_id':p['_id_x'],'quarter':str(f['year'])+' - '+f['quarter']}
 
             quarter_idx=np.argmin(abs(np.array([pp['Date'] for pp in p['close']])-f['quarter_date']))
             init_s=p['close'][quarter_idx]['Close']
@@ -84,7 +84,7 @@ def positions_worker(limit_n,skip_n):
                 doc['stock_info'].append(i)
         process_filing(doc, db)
 
-class PositionsRunner():
+class PositionsRunner:
     def __init__(self,n_cores=3):
         self.n_cores=n_cores
         self.processes=[]

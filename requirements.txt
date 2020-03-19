@@ -1,3 +1,4 @@
+pandas
 Beaker
 bs4
 lxml
