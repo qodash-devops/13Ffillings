@@ -25,6 +25,7 @@ print_title "Cleaning filing positions"
 python cleaning.py positions
 
 print_title "Building positions collection"
-cores=$(($(nproc)-2))
-echo "Using number of cores=$cores"
+#cores=$(($(nproc)-2))
+cores=10
+#echo "Using number of cores=$cores"
 python update_positions.py --n_cores=$cores run
