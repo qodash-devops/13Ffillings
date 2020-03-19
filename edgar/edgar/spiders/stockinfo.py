@@ -23,7 +23,7 @@ class QuantumonlineSpider(scrapy.Spider):
         all_cusips = filings.distinct("positions.cusip")
         all_cusips = list(all_cusips)
         present = [c['cusip'] for c in list(stock_info.find({}, {"cusip": 1}))]
-        missing = [c for c in all_cusips if not c in present]
+        missing = [c for c in all_cusips if (not c in present) and (not c is None) ]
         return sorted(missing)
 
     def start_requests(self):
