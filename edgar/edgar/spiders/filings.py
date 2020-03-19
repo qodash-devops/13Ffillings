@@ -23,7 +23,7 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
 
 class MissingFilingSpider(scrapy.Spider):
     name = "edgarfilings"
-    # custom_settings={'DELTAFETCH_ENABLED':False}
+    custom_settings={'DELTAFETCH_ENABLED':True}
     def start_requests(self):
         index=page_index.aggregate([{"$unwind":"$filings"},{'$project':{'url':"$filings"}}])
         present=filings.find({},{'docurl':1})
