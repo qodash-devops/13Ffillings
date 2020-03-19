@@ -46,6 +46,12 @@ class LogStats:
         log_args = {'pages': pages, 'pagerate': prate,
                     'items': items, 'itemrate': irate}
         logger.info(msg, log_args, extra={'spider': spider})
+        if spider.name=='edgarfilings':
+            nopos=self.stats.get_value('Number_of_filigs_without_position',0)
+            removed_idx=self.stats.get_value('Removed_page_indices',0)
+            npos=self.stats.get_value('Number_positions',0)
+            msg2=str({"filings with no positions":nopos,"removed pages from index":removed_idx,"Total number of positions":npos})
+            logger.info(msg2)
 
     def spider_closed(self, spider, reason):
         if self.task and self.task.running:

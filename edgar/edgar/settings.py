@@ -23,7 +23,7 @@ ITEM_PIPELINES = {
 }
 
 EXTENSIONS = {
-    'edgar.extensions.LogStats': 100,
+    'edgar.extensions.logstats.LogStats': 100,
     'scrapy.extensions.corestats.LogStats':None
 }
 
