@@ -6,7 +6,6 @@ services:
       dockerfile: Dockerfile
     command: "python /crawler/edgar/crawler-go.py edgarfilings   "
     environment:
-      - 'CRAWL_YEARS=2020'
       - 'MONGO_URI=mongodb://13fmongo:27017'
 #    volumes:
 #      - '/home/docker/edgar/crawlers/jobdir/edgarfilings:/var/tmp/scrapy/edgarfilings'

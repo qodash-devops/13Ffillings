@@ -3,6 +3,7 @@ import re,os,pymongo
 from ..items import EdgarItem
 from .edgar import FilingSpider
 from datetime import datetime
+import time
 import sys
 quarters={3:'Q1',6:'Q2',9:'Q3',12:'Q4'}
 quarters_to_parse=[1,2,3,4]
@@ -17,8 +18,6 @@ filings=db['filings_13f']
 def find_element(txt,tag='reportCalendarOrQuarter'):
     res=re.findall(f'<{tag}>[\s\S]*?<\/{tag}>', txt)
     res=[r.replace(f'<{tag}>','').replace(f'</{tag}>','') for r in res]
-    if len(res)==0:
-        return find_element(txt,tag='ns1:'+tag)
     return res
 
 class MissingFilingSpider(scrapy.Spider):
@@ -39,7 +38,14 @@ class MissingFilingSpider(scrapy.Spider):
                 self.logger.info(f'SKIPPING EXISTING URL:{url}')
 
     def parse_filing13F(self, response):
+        t1=time.time()
         txt = response.body.decode()
+        #Removing namepsaces from xml
+        txt=re.sub('<n\S{1,2}:','<',txt)
+        txt = re.sub('<\/n\S{1,3}:', '</', txt)
+        txt = re.sub('<N\S{1,2}:', '<', txt)
+        txt = re.sub('<\/N\S{1,3}:', '</', txt)
+
         report_type = find_element(txt, 'reportType')[0]
         assert '13F' in report_type
         filing = EdgarItem()
@@ -56,21 +62,25 @@ class MissingFilingSpider(scrapy.Spider):
         filing['docurl'] = response.url
         filing['filing_type'] = '13F'
         res_positions = []
-        positions = find_element(txt, 'ns1:infoTable')
-        ns = 'ns1:'
-        if len(positions) == 0:
-            positions = find_element(txt, 'infoTable')
-            ns = ''
+        positions = find_element(txt, 'infoTable')
+        if report_type=='13F NOTICE' and len(positions)==0:
+            #removing notice from index
+            page_index.update({}, {"$pull":{ "filings": response.url }},multi=True)
+            return
+
+
         for p in positions:
-            stock_name = find_element(p, ns + 'nameOfIssuer')[0]
-            stock_cusip = find_element(p, ns + 'cusip')[0]
-            shares = find_element(p, ns + 'shrsOrPrnAmt')[0]
-            n_shares = find_element(shares, ns + 'sshPrnamt')[0]
+            stock_name = find_element(p,  'nameOfIssuer')[0]
+            stock_cusip = find_element(p,  'cusip')[0]
+            shares = find_element(p,  'shrsOrPrnAmt')[0]
+            n_shares = find_element(shares,  'sshPrnamt')[0]
             put_call = find_element(txt, 'putCall')
             res_positions.append({'name': stock_name, 'cusip': stock_cusip, 'symbol': '',
                                   'quantity': n_shares, 'callput': put_call})
 
         filing['positions'] = res_positions
+        if len(res_positions)==0:
+            self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
         if len(positions) > 0:
             yield filing
 

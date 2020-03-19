@@ -21,7 +21,7 @@ run_crawler(){
 
 
 
-echo "MONGO_URI=$MONGO_URI"
-run_crawler edgar
-run_crawler quantumonline
+#echo "MONGO_URI=$MONGO_URI"
+#run_crawler edgar
+#run_crawler quantumonline
 tail -f $log_file
