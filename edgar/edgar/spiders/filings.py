@@ -17,6 +17,8 @@ filings=db['filings_13f']
 def find_element(txt,tag='reportCalendarOrQuarter'):
     res=re.findall(f'<{tag}>[\s\S]*?<\/{tag}>', txt)
     res=[r.replace(f'<{tag}>','').replace(f'</{tag}>','') for r in res]
+    if len(res)==0:
+        return find_element(txt,tag='ns1:'+tag)
     return res
 
 class MissingFilingSpider(scrapy.Spider):
