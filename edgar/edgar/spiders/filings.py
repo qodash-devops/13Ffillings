@@ -66,9 +66,11 @@ class MissingFilingSpider(scrapy.Spider):
         if report_type=='13F NOTICE' and len(positions)==0:
             #removing notice from index
             page_index.update({}, {"$pull":{ "filings": response.url }},multi=True)
+            self.crawler.stats.inc_value('Removed_page_indices')
             return
 
-
+        if len(positions)==0:
+            self.crawler.stats.inc_value('Number_of_filigs_without_position')
         for p in positions:
             stock_name = find_element(p,  'nameOfIssuer')[0]
             stock_cusip = find_element(p,  'cusip')[0]
@@ -82,6 +84,7 @@ class MissingFilingSpider(scrapy.Spider):
         if len(res_positions)==0:
             self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
         if len(positions) > 0:
+            self.crawler.stats.inc_value("Number_positions",len(positions))
             yield filing
 
 
