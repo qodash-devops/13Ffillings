@@ -22,7 +22,7 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
 
 class MissingFilingSpider(scrapy.Spider):
     name = "edgarfilings"
-    custom_settings={'DELTAFETCH_ENABLED':True}
+    custom_settings={'DELTAFETCH_ENABLED':False}
     def start_requests(self):
         index=page_index.aggregate([{"$unwind":"$filings"},{'$project':{'url':"$filings"}}])
         present=filings.find({},{'docurl':1})
@@ -45,7 +45,7 @@ class MissingFilingSpider(scrapy.Spider):
         txt = re.sub('<\/n\S{1,3}:', '</', txt)
         txt = re.sub('<N\S{1,2}:', '<', txt)
         txt = re.sub('<\/N\S{1,3}:', '</', txt)
-
+        txt = txt.replace('<eis:','<').replace('</eis:','</')
         report_type = find_element(txt, 'reportType')[0]
         assert '13F' in report_type
         filing = EdgarItem()
