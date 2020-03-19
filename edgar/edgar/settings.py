@@ -11,7 +11,7 @@ DOWNLOAD_DELAY = .10
 RANDOMIZE_DOWNLOAD_DELAY = True
 CONCURRENT_REQUESTS_PER_IP=50
 MEMUSAGE_ENABLED=True
-MEMUSAGE_LIMIT_MB=4000
+MEMUSAGE_LIMIT_MB=5000
 # ...
 # Configure item pipelines
 # See http://scrapy.readthedocs.org/en/latest/topics/item-pipeline.html
