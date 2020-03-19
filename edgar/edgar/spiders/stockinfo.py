@@ -29,7 +29,7 @@ class QuantumonlineSpider(scrapy.Spider):
     def start_requests(self):
         missing_cusips=self._get_missing_cusips()
         n_missing=len(missing_cusips)
-        if len(n_missing)>self.batch_size:
+        if n_missing>self.batch_size:
             missing_cusips=sample(missing_cusips,self.batch_size)
         if len(missing_cusips)>100:
             self.logger.warning(f'loading {len(missing_cusips)} cusips , ({n_missing}) total missing')
