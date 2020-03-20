@@ -74,7 +74,7 @@ def positions_worker(limit_n,skip_n,existing_positions):
     client = pymongo.MongoClient(mongo_uri)
     db = client['edgar']
     cur = db['filings_13f'].find({}).skip(skip_n).limit(limit_n)
-    bar = tqdm.tqdm(cur, desc=f'positions queue ({skip_n}-{skip_n + limit_n})', total=limit_n,
+    bar = tqdm.tqdm(cur, desc=f'filing queue ({skip_n}-{skip_n + limit_n})', total=limit_n,
                     position=int(skip_n / limit_n))
     for doc in bar:
         doc['stock_info'] = []
