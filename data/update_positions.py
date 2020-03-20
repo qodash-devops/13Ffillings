@@ -69,7 +69,7 @@ def process_filing(f,db):
     except:
         pass
 
-def positions_worker(limit_n,skip_n):
+def positions_worker(limit_n,skip_n,existing_positions):
     mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27020')
     client = pymongo.MongoClient(mongo_uri)
     db = client['edgar']
@@ -79,6 +79,8 @@ def positions_worker(limit_n,skip_n):
     for doc in bar:
         doc['stock_info'] = []
         for p in doc['positions']:
+            if p['_id'] in existing_positions:
+                continue
             i = db['stock_info'].find_one({'cusip': p['cusip']})
             if not i is None:
                 doc['stock_info'].append(i)
@@ -88,23 +90,24 @@ class PositionsRunner:
     def __init__(self,n_cores=3):
         self.n_cores=n_cores
         self.processes=[]
-    def run(self):
+    def run(self,reset_all=False):
         logger.info(f"Running with {self.n_cores} processes")
         mongo_uri = os.environ.get('MONGO_URI', 'mongodb://localhost:27020')
         client = pymongo.MongoClient(mongo_uri)
         db = client['edgar']
         db['stock_info'].ensure_index('cusip', pymongo.ASCENDING)
-        db.drop_collection(output_col)
+        if reset_all:
+            db.drop_collection(output_col)
         filings = db['filings_13f']
         res = filings.find({}, batch_size=1000)
         n_filigs = res.count()
-
+        existing_positions=[r['_id'] for r in db[output_col].find({},{'_id':1})]
         batchsize = n_filigs // self.n_cores
         skips = range(0, self.n_cores * batchsize, batchsize)
         pool=ProcessPoolExecutor(self.n_cores)
         fututes=[]
         for s in skips:
-            fututes.append(pool.submit(positions_worker,batchsize,s))
+            fututes.append(pool.submit(positions_worker,batchsize,s,existing_positions))
         for f in as_completed(fututes):
             logger.info(f'process completed ')
 
