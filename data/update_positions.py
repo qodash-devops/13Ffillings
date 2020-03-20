@@ -97,11 +97,13 @@ class PositionsRunner:
         db = client['edgar']
         db['stock_info'].ensure_index('cusip', pymongo.ASCENDING)
         if reset_all:
+            logger.warning(f'Removing existing collection {output_col}')
             db.drop_collection(output_col)
         filings = db['filings_13f']
         res = filings.find({}, batch_size=1000)
         n_filigs = res.count()
         existing_positions=[r['_id'] for r in db[output_col].find({},{'_id':1})]
+        logger.info(f'Number of existing positions:{len(existing_positions)}')
         batchsize = n_filigs // self.n_cores
         skips = range(0, self.n_cores * batchsize, batchsize)
         pool=ProcessPoolExecutor(self.n_cores)
