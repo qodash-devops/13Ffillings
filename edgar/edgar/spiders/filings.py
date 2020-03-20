@@ -22,7 +22,7 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
 
 class MissingFilingSpider(scrapy.Spider):
     name = "edgarfilings"
-    custom_settings={'DELTAFETCH_ENABLED':False}
+    custom_settings={'DELTAFETCH_ENABLED':False,'JOBDIR':''}
     def start_requests(self):
         index=page_index.aggregate([{"$unwind":"$filings"},{'$project':{'url':"$filings"}}])
         present=filings.find({},{'docurl':1})
@@ -37,55 +37,67 @@ class MissingFilingSpider(scrapy.Spider):
             else:
                 self.logger.info(f'SKIPPING EXISTING URL:{url}')
 
+    @staticmethod
+    def get_process_memory():
+        import os, psutil
+        process = psutil.Process(os.getpid())
+        mem_used = process.memory_full_info()[0] / 1e6
+        return mem_used
+
     def parse_filing13F(self, response):
-        t1=time.time()
-        txt = response.body.decode()
-        #Removing namepsaces from xml
-        txt=re.sub('<n\S{1,2}:','<',txt)
-        txt = re.sub('<\/n\S{1,3}:', '</', txt)
-        txt = re.sub('<N\S{1,2}:', '<', txt)
-        txt = re.sub('<\/N\S{1,3}:', '</', txt)
-        txt = txt.replace('<eis:','<').replace('</eis:','</')
-        report_type = find_element(txt, 'reportType')[0]
-        assert '13F' in report_type
-        filing = EdgarItem()
-        filing['quarter_date'] = find_element(txt, 'reportCalendarOrQuarter')[0]
+
         try:
-            dt = datetime.strptime(filing['quarter_date'], '%m-%d-%Y')
-            filing['year'] = dt.year
-            filing['quarter'] = quarters[dt.month]
+            txt = response.body.decode()
+            #Removing namepsaces from xml
+            txt=re.sub('<n\S{1,2}:','<',txt)
+            txt = re.sub('<\/n\S{1,3}:', '</', txt)
+            txt = re.sub('<N\S{1,2}:', '<', txt)
+            txt = re.sub('<\/N\S{1,3}:', '</', txt)
+            txt = txt.replace('<eis:','<').replace('</eis:','</')
+            report_type = find_element(txt, 'reportType')[0]
+            assert '13F' in report_type
+            filing = EdgarItem()
+            filing['quarter_date'] = find_element(txt, 'reportCalendarOrQuarter')[0]
+            try:
+                dt = datetime.strptime(filing['quarter_date'], '%m-%d-%Y')
+                filing['year'] = dt.year
+                filing['quarter'] = quarters[dt.month]
+            except:
+                self.logger.error(f"Parsing date:{filing['quarter_date']}")
+            filing['filer_cik'] = find_element(txt, 'cik')[0]
+            filer_name = find_element(txt, 'filingManager')[0]
+            filing['filer_name'] = find_element(filer_name, 'name')[0]
+            filing['docurl'] = response.url
+            filing['filing_type'] = '13F'
+            res_positions = []
+            positions = find_element(txt, 'infoTable')
+            if report_type=='13F NOTICE' and len(positions)==0:
+                #removing notice from index
+                page_index.update({}, {"$pull":{ "filings": response.url }},multi=True)
+                self.crawler.stats.inc_value('Removed_page_indices')
+                return
+
+            if len(positions)==0:
+                self.crawler.stats.inc_value('Number_of_filigs_without_position')
+            if len(positions)>10000:
+                self.logger.warning(f"Filing with {len(positions)} positions")
+            for p in positions:
+                stock_name = find_element(p,  'nameOfIssuer')[0]
+                stock_cusip = find_element(p,  'cusip')[0]
+                shares = find_element(p,  'shrsOrPrnAmt')[0]
+                n_shares = find_element(shares,  'sshPrnamt')[0]
+                put_call = find_element(p, 'putCall')
+                res_positions.append({'name': stock_name, 'cusip': stock_cusip, 'symbol': '',
+                                      'quantity': n_shares, 'callput': put_call})
+
+            filing['positions'] = res_positions
+            if len(res_positions)==0:
+                self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
+            if len(positions) > 0:
+                self.crawler.stats.inc_value("Number_positions",len(positions))
+                yield filing
+
         except:
-            self.logger.error(f"Parsing date:{filing['quarter_date']}")
-        filing['filer_cik'] = find_element(txt, 'cik')[0]
-        filer_name = find_element(txt, 'filingManager')[0]
-        filing['filer_name'] = find_element(filer_name, 'name')[0]
-        filing['docurl'] = response.url
-        filing['filing_type'] = '13F'
-        res_positions = []
-        positions = find_element(txt, 'infoTable')
-        if report_type=='13F NOTICE' and len(positions)==0:
-            #removing notice from index
-            page_index.update({}, {"$pull":{ "filings": response.url }},multi=True)
-            self.crawler.stats.inc_value('Removed_page_indices')
-            return
-
-        if len(positions)==0:
-            self.crawler.stats.inc_value('Number_of_filigs_without_position')
-        for p in positions:
-            stock_name = find_element(p,  'nameOfIssuer')[0]
-            stock_cusip = find_element(p,  'cusip')[0]
-            shares = find_element(p,  'shrsOrPrnAmt')[0]
-            n_shares = find_element(shares,  'sshPrnamt')[0]
-            put_call = find_element(txt, 'putCall')
-            res_positions.append({'name': stock_name, 'cusip': stock_cusip, 'symbol': '',
-                                  'quantity': n_shares, 'callput': put_call})
-
-        filing['positions'] = res_positions
-        if len(res_positions)==0:
-            self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
-        if len(positions) > 0:
-            self.crawler.stats.inc_value("Number_positions",len(positions))
-            yield filing
-
-
+            self.logger.error(f'Processing url: {response.url}')
+            self.logger.error(f"Reason {sys.exc_info()}")
 

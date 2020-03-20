@@ -9,7 +9,7 @@ ROBOTSTXT_OBEY = False
 STATS_DUMP = True
 LOGSTATS_INTERVAL = 60
 AUTOTHROTTLE_ENABLED=True
-DOWNLOAD_DELAY = .10
+DOWNLOAD_DELAY = .25
 CONCURRENT_REQUESTS_PER_IP=50
 MEMUSAGE_ENABLED=True
 COOKIES_ENABLED=False
@@ -52,8 +52,8 @@ color_formatter = ColoredFormatter(
     log_colors={
         'DEBUG': 'blue',
         'INFO': 'bold_cyan',
-        'WARNING': 'red',
-        'ERROR': 'bg_bold_red',
+        'WARNING': 'bold_yellow',
+        'ERROR': 'bold_red',
         'CRITICAL': 'red,bg_white',
     }
 )
