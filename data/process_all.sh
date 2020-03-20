@@ -18,14 +18,14 @@ python views.py
 print_title "Cleaning filing indexes"
 python cleaning.py index
 
-print_title "Cleaning filing stock info"
-python cleaning.py info
+#print_title "Cleaning filing stock info"
+#python cleaning.py info
 
-print_title "Cleaning filing positions"
-python cleaning.py positions
+#print_title "Cleaning filing positions"
+#python cleaning.py positions
 
-print_title "Building positions collection"
-#cores=$(($(nproc)-2))
-cores=10
-#echo "Using number of cores=$cores"
-python update_positions.py --n_cores=$cores run
+#print_title "Building positions collection"
+##cores=$(($(nproc)-2))
+#cores=10
+##echo "Using number of cores=$cores"
+#python update_positions.py --n_cores=$cores run
