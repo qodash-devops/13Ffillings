@@ -1,7 +1,6 @@
 import scrapy
 import re,os,pymongo
 from ..items import PageIndexItem
-from .edgar import FilingSpider
 from datetime import datetime
 import sys
 quarters={3:'Q1',6:'Q2',9:'Q3',12:'Q4'}

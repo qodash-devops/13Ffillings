@@ -1,7 +1,6 @@
 import scrapy
 import re,os,pymongo
 from ..items import EdgarItem
-from .edgar import FilingSpider
 from datetime import datetime
 import time
 import sys
@@ -35,7 +34,7 @@ class MissingFilingSpider(scrapy.Spider):
             if res is None:
                 yield scrapy.Request(url=url, callback=self.parse_filing13F)
             else:
-                self.logger.info(f'SKIPPING EXISTING URL:{url}')
+                self.logger.debug(f'SKIPPING EXISTING URL:{url}')
 
     @staticmethod
     def get_process_memory():
