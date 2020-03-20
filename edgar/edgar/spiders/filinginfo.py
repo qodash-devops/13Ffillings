@@ -1,8 +1,10 @@
 import scrapy
 import re,os,pymongo
-from ..items import F13FilingItem
+from ..items import F13FilingItem,StockInfoItem
+from .filings import MissingFilingSpider
 from datetime import datetime
 import time
+from bson.objectid import ObjectId
 import sys
 quarters={3:'Q1',6:'Q2',9:'Q3',12:'Q4'}
 quarters_to_parse=[1,2,3,4]
@@ -19,32 +21,40 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
     res=[r.replace(f'<{tag}>','').replace(f'</{tag}>','') for r in res]
     return res
 
-class MissingFilingSpider(scrapy.Spider):
-    name = "edgarfilings"
-    custom_settings={'DELTAFETCH_ENABLED':False,'JOBDIR':''}
-    def start_requests(self):
-        index=page_index.aggregate([{"$unwind":"$filings"},{'$project':{'url':"$filings"}}])
-        present=filings.find({},{'docurl':1})
-        index=[r['url'] for r in index]
-        present=[r['docurl'] for r in present]
-        missing=set(index).difference(set(present))
-        self.logger.warning(f'Found {len(missing)} urls missing')
-        for url in missing:
-            res=filings.find_one({'docurl':url})
-            if res is None:
-                yield scrapy.Request(url=url, callback=self.parse_filing13F)
-            else:
-                self.logger.debug(f'SKIPPING EXISTING URL:{url}')
+class MergeSpider(MissingFilingSpider):
+    name = "mergespider"
+    custom_settings={'DELTAFETCH_ENABLED':False,'JOBDIR':'',
+                     'ITEM_PIPELINES':{'edgar.pipelines.MergePipeline': 300},
+                     'DEPTH_PRIORITY':1,
+                     'SCHEDULER_DISK_QUEUE' :'scrapy.squeues.PickleFifoDiskQueue',
+                     'SCHEDULER_MEMORY_QUEUE' : 'scrapy.squeues.FifoMemoryQueue'}
 
-    @staticmethod
-    def get_process_memory():
-        import os, psutil
-        process = psutil.Process(os.getpid())
-        mem_used = process.memory_full_info()[0] / 1e6
-        return mem_used
+    stock_info={}
+    def parse_cusip(self, response,cusip):
+        try:
+            notFound=response.xpath("//*[contains(text(), 'Not Found!')]").get()
+            if notFound is None:
+                tmp=response.xpath("//*[contains(text(), 'Ticker Symbol:')]").get()
+                ticker=tmp.split('\xa0')[0].split(':')[1].strip()
+                exchange=tmp.split('\xa0')[-1].strip('</b>').split(':')[1].strip()
+                i=StockInfoItem()
+                i['cusip']=cusip
+                i['ticker']=ticker.replace('*','')
+                i['exchange']=exchange
+                i['status']='OK'
+                yield i
+            else:
+                i = StockInfoItem()
+                i['cusip'] = cusip
+                i['ticker'] = ''
+                i['exchange'] = ''
+                i['status'] = 'NOTFOUND'
+                yield i
+
+        except:
+            pass
 
     def parse_filing13F(self, response):
-
         try:
             txt = response.body.decode()
             #Removing namepsaces from xml
@@ -80,16 +90,33 @@ class MissingFilingSpider(scrapy.Spider):
                 self.crawler.stats.inc_value('Number_of_filigs_without_position')
             if len(positions)>10000:
                 self.logger.warning(f"Filing with {len(positions)} positions URL={response.url}")
+            cusips=[]
             for p in positions:
                 stock_name = find_element(p,  'nameOfIssuer')[0]
                 stock_cusip = find_element(p,  'cusip')[0]
+                cusips.append(stock_cusip)
                 shares = find_element(p,  'shrsOrPrnAmt')[0]
                 n_shares = find_element(shares,  'sshPrnamt')[0]
+                try:
+                    n_shares=float(n_shares.replace(' ',''))
+                except:
+                    pass
                 put_call = find_element(p, 'putCall')
                 res_positions.append({'name': stock_name, 'cusip': stock_cusip, 'symbol': '',
                                       'quantity': n_shares, 'callput': put_call})
 
             filing['positions'] = res_positions
+            cusips=list(set(cusips))
+            for cusip in cusips:
+                info = db['stock_info'].find_one({"cusip": cusip})
+                if info is None:
+                    h = {"Content-Type": "application/x-www-form-urlencoded"}
+                    request = scrapy.FormRequest(url='https://www.quantumonline.com/search.cfm',
+                                                 formdata={"sopt": "cusip", "tickersymbol": cusip}, headers=h,
+                                                 callback=self.parse_cusip)
+                    request.cb_kwargs["cusip"] = cusip
+                    yield request
+
             if len(res_positions)==0:
                 self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
             if len(positions) > 0:

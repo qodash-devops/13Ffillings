@@ -33,7 +33,7 @@ LOG_FORMAT = '%(levelname)s: %(message)s'
 YEARS=os.environ.get('CRAWL_YEARS','2019').split(',')
 
 SPIDER_MIDDLEWARES = {
-    'scrapy_deltafetch.DeltaFetch': 100,
+    'scrapy_deltafetch.DeltaFetch': 100
 }
 DELTAFETCH_ENABLED = True
 

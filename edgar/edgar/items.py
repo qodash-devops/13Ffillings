@@ -7,7 +7,7 @@
 
 import scrapy
 
-class EdgarItem(scrapy.Item):
+class F13FilingItem(scrapy.Item):
     # define the fields for your item here like:
 
     filing_type=scrapy.Field()
@@ -20,6 +20,21 @@ class EdgarItem(scrapy.Item):
     symbol=scrapy.Field()
     docurl=scrapy.Field()
 
+class PositionItem(scrapy.Item):
+    filing_id=scrapy.Field()
+    quarter_date=scrapy.Field()
+    quarter=scrapy.Field()
+    year=scrapy.Field()
+    filer_name=scrapy.Field()
+    filer_cik=scrapy.Field()
+    quantity=scrapy.Field()
+
+    spot=scrapy.Field()
+    spot_date=scrapy.Field()
+    next_quarter_spot=scrapy.Field()
+    next_quarter_spot_date=scrapy.Field()
+    past_quarter_spot=scrapy.Field()
+    past_quarter_spot_date=scrapy.Field()
 
 class StockInfoItem(scrapy.Item):
     # define the fields for your item here like:
