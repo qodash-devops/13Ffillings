@@ -30,7 +30,7 @@ var updateStockPositions=function(){
                         "init_spot":1,"past_q_spot":1,"next_q_spot":1,
                         "return_before":{$cond: { if: { $eq:["$past_q_spot.Close",0] }, then: 0, else: {"$add":[{"$divide": ["$init_spot.Close","$past_q_spot.Close" ]},-1]}}},
                         "return_after":{$cond: { if: { $eq:["$init_spot.Close",0] }, then: 0, else: {"$add":[{"$divide": ["$next_q_spot.Close","$init_spot.Close" ]},-1]}}}}},
-            { $merge: { into: "stocks_positions", whenMatched: "replace" } }
+            { $merge: { into: "positions_mv", whenMatched: "replace" } }
 
     ]);
 
