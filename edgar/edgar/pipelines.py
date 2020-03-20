@@ -1,7 +1,6 @@
 import yfinance as yf
 import pymongo
 import sys
-from pympler import muppy
 
 
 def chunks(lst, n):
