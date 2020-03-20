@@ -19,18 +19,13 @@ print_title "Cleaning filing indexes"
 python cleaning.py index
 
 
-#!/usr/bin/env bash
-docker cp ./positions_materialized_view.js 13fmongo:/positions_materialized_view.js
-docker exec 13fmongo sh -c 'mongo edgar /positions_materialized_view.js'
+print_title "Cleaning filing stock info"
+python cleaning.py info
 
-#print_title "Cleaning filing stock info"
-#python cleaning.py info
+print_title "Cleaning filing positions"
+python cleaning.py positions
 
-#print_title "Cleaning filing positions"
-#python cleaning.py positions
-
-#print_title "Building positions collection"
-##cores=$(($(nproc)-2))
-#cores=10
-##echo "Using number of cores=$cores"
-#python update_positions.py --n_cores=$cores run
+print_title "Building positions collection"
+cores=$(($(nproc)-2))
+echo "Using number of cores=$cores"
+python update_positions.py --n_cores=$cores run
