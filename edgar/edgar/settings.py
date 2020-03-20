@@ -43,7 +43,7 @@ DELTAFETCH_ENABLED = True
 
 color_formatter = ColoredFormatter(
     (
-        '%(name)s>>> %(log_color)s%(levelname)-5s%(reset)s '
+        '%(log_color)s%(levelname)-5s%(reset)s '
         '%(yellow)s[%(asctime)s]%(reset)s'
         '%(white)s %(name)s %(funcName)s %(bold_purple)s:%(lineno)d%(reset)s '
         '%(log_color)s%(message)s%(reset)s'
