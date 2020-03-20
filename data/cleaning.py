@@ -31,7 +31,8 @@ def remove_duplicate_index():
         if len(r['filings'])!=len(list(set(r['filings']))):
             #duplicate urls
             r['filings']=list(set(r['filings']))
-            index.update({'_id':r['_id']},r)
+        r['n_filings']=len(r['filings'])
+        index.update({'_id':r['_id']},r)
     print(f'n_urls={len(all_urls)} , n unique={len(set(all_urls))}')
 
 def chunks(lst, n):
