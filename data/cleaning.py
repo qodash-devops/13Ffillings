@@ -48,20 +48,24 @@ def clean_positions(max_positions_split=10000000):
             f['quarter_date']=datetime.strptime(f['quarter_date'],'%m-%d-%Y')
         elif not isinstance(f['quarter_date'],datetime):
             logger.error(f'filing {f["_id"]} quarter_date error!')
-        for i in range(len(f['positions'])):
-            if type(f['positions'][i]['quantity'])==str:
-                f['positions'][i]['quantity']=float(f['positions'][i]['quantity'].strip())
-            elif type(f['positions'][i]['quantity'])!=float:
+        positions=f.get('positions',[])
+        npos=len(positions)
+        for i in range(npos):
+            if type(positions[i]['quantity'])==str:
+                positions[i]['quantity']=float(positions[i]['quantity'].strip())
+            elif type(positions[i]['quantity'])!=float:
                 logger.error(f'Position {i} for filing {f["_id"]}:type of quantity!')
-            f['positions'][i]['_id']=ObjectId()
-        if len(f['positions'])>max_positions_split:
+            positions[i]['_id']=ObjectId()
+        if npos>max_positions_split:
+            logger.info(f'spliting positions for filing _id:{f["_id"]}')
             filings.delete_one({'_id':f['_id']})
-            for positions in chunks(f['positions'],max_positions_split):
+            for pos in chunks(positions,max_positions_split):
                 nf={k:v for k,v in f.items() if k!='positions'}
-                nf['positions']=positions
+                nf['positions']=pos
                 nf['_id']=ObjectId()
                 filings.insert(nf)
         else:
+            f['positions']=positions
             filings.update({"_id":f['_id']},f)
 
 
@@ -71,7 +75,7 @@ def clean_stock_info():
     bar=tqdm(res,desc='stock_info',total=res.count())
     for info in bar:
         if "info" in info.keys():
-            info['market_cap']=info['info']['marketCap']
+            info['market_cap']=info['info'].get('marketCap',0)
             info['sector']=info['info'].get('sector','')
             info['volume']=info['info'].get('averageDailyVolume10Day',0)
             for i in range(len(info['close'])):
