@@ -36,4 +36,4 @@ var updateStockPositions=function(){
 
 };
 db.system.js.save({_id:"updateStockPositions",value:updateStockPositions})
-//updateStockPositions();
+updateStockPositions();

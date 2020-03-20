@@ -20,8 +20,8 @@ python cleaning.py index
 
 
 #!/usr/bin/env bash
-docker cp ./positions_update.js 13fmongo:/positions_update.js
-docker exec 13fmongo sh -c 'mongo edgar /positions_update.js'
+docker cp ./positions_materialized_view.js 13fmongo:/positions_materialized_view.js
+docker exec 13fmongo sh -c 'mongo edgar /positions_materialized_view.js'
 
 #print_title "Cleaning filing stock info"
 #python cleaning.py info
