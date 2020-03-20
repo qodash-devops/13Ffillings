@@ -80,7 +80,7 @@ class MissingFilingSpider(scrapy.Spider):
             if len(positions)==0:
                 self.crawler.stats.inc_value('Number_of_filigs_without_position')
             if len(positions)>10000:
-                self.logger.warning(f"Filing with {len(positions)} positions")
+                self.logger.warning(f"Filing with {len(positions)} positions URL={response.url}")
             for p in positions:
                 stock_name = find_element(p,  'nameOfIssuer')[0]
                 stock_cusip = find_element(p,  'cusip')[0]
