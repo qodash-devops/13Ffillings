@@ -18,6 +18,11 @@ python views.py
 print_title "Cleaning filing indexes"
 python cleaning.py index
 
+
+#!/usr/bin/env bash
+docker cp ./positions_update.js 13fmongo:/positions_update.js
+docker exec 13fmongo sh -c 'mongo edgar /positions_update.js'
+
 #print_title "Cleaning filing stock info"
 #python cleaning.py info
 
