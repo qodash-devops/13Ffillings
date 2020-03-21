@@ -131,4 +131,4 @@ class MergePipeline(EdgarPipeline):
                 spider.crawler.stats.inc_value('positions')
     def updatePosition(self,filing,stockinfo):
         pos = PositionItem()
-        pos['filing_id'] = filing['docurl']
+        pos['filing_id'] = filing['_id']
