@@ -2,7 +2,7 @@ import scrapy
 import re,os,pymongo
 from ..items import F13FilingItem
 from datetime import datetime
-import time
+import random
 import sys
 quarters={3:'Q1',6:'Q2',9:'Q3',12:'Q4'}
 quarters_to_parse=[1,2,3,4]
@@ -28,6 +28,7 @@ class MissingFilingSpider(scrapy.Spider):
         index=[r['url'] for r in index]
         present=[r['docurl'] for r in present]
         missing=set(index).difference(set(present))
+        missing=random.shuffle(list(missing)) #Shuffling list of urls to fetch to speed up multi processing when scaling
         self.logger.warning(f'Found {len(missing)} urls missing')
         for url in missing:
             res=filings.find_one({'docurl':url})
@@ -36,12 +37,6 @@ class MissingFilingSpider(scrapy.Spider):
             else:
                 self.logger.debug(f'SKIPPING EXISTING URL:{url}')
 
-    @staticmethod
-    def get_process_memory():
-        import os, psutil
-        process = psutil.Process(os.getpid())
-        mem_used = process.memory_full_info()[0] / 1e6
-        return mem_used
 
     def parse_filing13F(self, response):
 

@@ -1,14 +1,12 @@
 version: '3.7'
 services:
-  filingcrawler:
+  positionscrawler:
     build:
       context: .
       dockerfile: Dockerfile
-    command: "python /crawler/edgar/crawler-go.py edgarfilings   "
+    command: "python /crawler/edgar/crawler-go.py positions   "
     environment:
       - 'MONGO_URI=mongodb://13fmongo:27017'
-#    volumes:
-#      - '/home/docker/edgar/crawlers/jobdir/edgarfilings:/var/tmp/scrapy/edgarfilings'
     restart: always
     depends_on:
       - mongo
@@ -22,19 +20,7 @@ services:
       - 'MONGO_URI=mongodb://13fmongo:27017'
     depends_on:
       - mongo
-  stockinfo:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: "python /crawler/edgar/crawler-go.py stockinfo   "
-    environment:
-      - 'CRAWL_YEARS=2018,2019,2020'
-      - 'MONGO_URI=mongodb://13fmongo:27017'
-#    volumes:
-#      - '/home/docker/edgar/crawlers/jobdir/stockinfo:/var/tmp/scrapy/stockinfo'
-    restart: always
-    depends_on:
-      - mongo
+
   mongo:
     image: mongo:latest
     container_name: 13fmongo

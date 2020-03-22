@@ -9,3 +9,5 @@ scrapy-deltafetch
 fire
 colorlog
 tqdm
+requests
+multitasking
