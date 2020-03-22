@@ -8,5 +8,4 @@ Scrapy
 scrapy-deltafetch
 fire
 colorlog
-yfinance
 tqdm

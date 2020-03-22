@@ -22,12 +22,16 @@ class F13FilingItem(scrapy.Item):
 
 class PositionItem(scrapy.Item):
     filing_id=scrapy.Field()
+    stockinfo_id =scrapy.Field()
     quarter_date=scrapy.Field()
     quarter=scrapy.Field()
     year=scrapy.Field()
     filer_name=scrapy.Field()
     filer_cik=scrapy.Field()
     quantity=scrapy.Field()
+    ticker=scrapy.Field()
+    cusip=scrapy.Field()
+    info=scrapy.Field()
 
     spot=scrapy.Field()
     spot_date=scrapy.Field()

@@ -22,9 +22,9 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
     return res
 
 class MergeSpider(MissingFilingSpider):
-    name = "mergespider"
+    name = "positions"
     custom_settings={'DELTAFETCH_ENABLED':False,'JOBDIR':'',
-                     'ITEM_PIPELINES':{'edgar.pipelines.MergePipeline': 300},
+                     'ITEM_PIPELINES':{'edgar.pipelines.PositionsPipeline': 300},
                      'DEPTH_PRIORITY':1,
                      'SCHEDULER_DISK_QUEUE' :'scrapy.squeues.PickleFifoDiskQueue',
                      'SCHEDULER_MEMORY_QUEUE' : 'scrapy.squeues.FifoMemoryQueue'}
@@ -69,6 +69,7 @@ class MergeSpider(MissingFilingSpider):
             filing['quarter_date'] = find_element(txt, 'reportCalendarOrQuarter')[0]
             try:
                 dt = datetime.strptime(filing['quarter_date'], '%m-%d-%Y')
+                filing['quarter_date']=dt
                 filing['year'] = dt.year
                 filing['quarter'] = quarters[dt.month]
             except:

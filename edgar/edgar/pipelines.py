@@ -1,11 +1,11 @@
-import yfinance as yf
+import data.yfinance as yf
 import pymongo
 import sys
 from bson.objectid import ObjectId
 from .items import PositionItem
 import calendar
 import os
-
+import numpy as np
 
 def chunks(lst, n):
     """Yield successive n-sized chunks from lst."""
@@ -83,13 +83,14 @@ class EdgarPipeline(object):
         info=t.info
         res = t.history(period="3y")
         res = res["Close"]
-        res.index = res.index.astype(str)
+        res.index = res.index.to_pydatetime()
         close = res.dropna().to_frame().reset_index().to_dict(orient='records')
         return close,info
 
 
-class MergePipeline(EdgarPipeline):
+class PositionsPipeline(EdgarPipeline):
     def process_item(self, item, spider):
+        self.spider=spider
         ## how to handle each filing
         item_type=item._class.__name__
         if item_type=='x_F13FilingItem':
@@ -112,8 +113,8 @@ class MergePipeline(EdgarPipeline):
             for p in item['positions']:
                 info=self.db[self.collection_stock_info].find_one({'_id':p['_id']})
                 if not info is None:
-                    self.updatePosition(i,info)
-                    spider.crawler.stats.inc_value('positions')
+                    self.updatePosition(p,i, info)
+
 
         elif item_type=='x_StockInfoItem':
             i=dict(item)
@@ -124,11 +125,52 @@ class MergePipeline(EdgarPipeline):
                 i['close'] = []
             i['_id']=ObjectId(('CUS' + i['cusip']).encode())
             self.db[self.collection_stock_info].update(key, i, upsert=True)
-            spider.crawler.stats.inc_value('stock_info')
             filings=self.db[self.collection_name].find({"positions.cusip":i['cusip']})
+            spider.crawler.stats.inc_value('stock_info')
             for f in filings:
-                self.updatePosition(f,i)
-                spider.crawler.stats.inc_value('positions')
-    def updatePosition(self,filing,stockinfo):
+                for p in f['positions']:
+                    if p['cusip']==i['cusip']:
+                        self.updatePosition(p,f, i)
+
+    def updatePosition(self, position,filing, stockinfo):
+        assert position['cusip']==stockinfo['cusip']
+        if len(stockinfo['close'])==0:
+            try:
+                ticker=stockinfo['ticker']
+            except:
+                ticker='Notfound'
+            self.spider.logger.warning(f"No spots for cusip={position['cusip']} ticker={ticker} name=\"{position['name']}\"")
+            return
         pos = PositionItem()
-        pos['filing_id'] = filing['_id']
+        try:
+            pos['filing_id'] = filing['_id']
+            pos['stockinfo_id']=stockinfo['_id']
+            pos['info']=stockinfo['info']
+            pos['quarter_date']=filing['quarter_date']
+            pos['quarter']=filing['quarter']
+            pos['year']=filing['year']
+            pos['filer_name']=filing['filer_name']
+            pos['filer_cik']=filing['filer_cik']
+
+            pos['quantity']=position['quantity']
+            pos['cusip']=position['cusip']
+            pos['ticker']=stockinfo['ticker']
+            quarter_idx=np.argmin(abs(np.array([pp['index'] for pp in stockinfo['close']])-filing['quarter_date']))
+            pos['spot_date']=stockinfo['close'][quarter_idx]['index']
+            pos['spot']=stockinfo['close'][quarter_idx]['Close']
+
+            next_quarter_idx=min(quarter_idx + 64, len(stockinfo['close']) - 1)
+            prev_quarter_idx=max(quarter_idx-64,0)
+            pos['next_quarter_spot_date'] = stockinfo['close'][next_quarter_idx]['index']
+            pos['next_quarter_spot'] = stockinfo['close'][next_quarter_idx]['Close']
+            pos['past_quarter_spot_date'] = stockinfo['close'][prev_quarter_idx]['index']
+            pos['past_quarter_spot'] = stockinfo['close'][prev_quarter_idx]['Close']
+
+            keys={'filing_id':pos['filing_id'],'cusip':pos['cusip']}
+            self.db['positions'].update(keys,pos,upsert=True)
+            self.spider.crawler.stats.inc_value('positions')
+
+        except:
+            self.spider.logger.error(f"getting position reason={sys.exc_info()}")
+
+
