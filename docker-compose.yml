@@ -5,8 +5,8 @@ services:
       context: .
       dockerfile: Dockerfile
     command: "python /crawler/edgar/crawler-go.py positions   "
-    environment:
-      - 'MONGO_URI=mongodb://13fmongo:27017'
+    env_file:
+      - .env
     restart: always
     depends_on:
       - mongo
