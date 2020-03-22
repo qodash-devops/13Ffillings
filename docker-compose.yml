@@ -31,6 +31,7 @@ services:
       - 'MONGO_URI=mongodb://13fmongo:27017'
     depends_on:
       - mongo
+    restart: always
   mongo:
     image: mongo:latest
     container_name: 13fmongo
