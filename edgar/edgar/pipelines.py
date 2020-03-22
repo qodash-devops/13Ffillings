@@ -139,7 +139,7 @@ class PositionsPipeline(EdgarPipeline):
                 ticker=stockinfo['ticker']
             except:
                 ticker='Notfound'
-            self.spider.logger.warning(f"No spots for cusip={position['cusip']} ticker={ticker} name=\"{position['name']}\"")
+            # self.spider.logger.warning(f"No spots for cusip={position['cusip']} ticker={ticker} name=\"{position['name']}\"")
             return
         pos = PositionItem()
         try:
