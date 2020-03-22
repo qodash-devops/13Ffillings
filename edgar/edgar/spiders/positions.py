@@ -107,16 +107,18 @@ class MergeSpider(MissingFilingSpider):
                                       'quantity': n_shares, 'callput': put_call})
 
             filing['positions'] = res_positions
-            cusips=list(set(cusips))
-            for cusip in cusips:
-                info = db['stock_info'].find_one({"cusip": cusip})
-                if info is None:
-                    h = {"Content-Type": "application/x-www-form-urlencoded"}
-                    request = scrapy.FormRequest(url='https://www.quantumonline.com/search.cfm',
-                                                 formdata={"sopt": "cusip", "tickersymbol": cusip}, headers=h,
-                                                 callback=self.parse_cusip)
-                    request.cb_kwargs["cusip"] = cusip
-                    yield request
+
+            #Updating missing stock info
+            # cusips=list(set(cusips))
+            # for cusip in cusips:
+            #     info = db['stock_info'].find_one({"cusip": cusip})
+            #     if info is None:
+            #         h = {"Content-Type": "application/x-www-form-urlencoded"}
+            #         request = scrapy.FormRequest(url='https://www.quantumonline.com/search.cfm',
+            #                                      formdata={"sopt": "cusip", "tickersymbol": cusip}, headers=h,
+            #                                      callback=self.parse_cusip)
+            #         request.cb_kwargs["cusip"] = cusip
+            #         yield request
 
             if len(res_positions)==0:
                 self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
