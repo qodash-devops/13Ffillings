@@ -89,7 +89,7 @@ class EdgarPipeline(object):
 
 
 class PositionsPipeline(EdgarPipeline):
-    @profile
+    # @profile
     def process_item(self, item, spider):
         self.spider=spider
         ## how to handle each filing
