@@ -15,9 +15,8 @@ services:
       context: .
       dockerfile: Dockerfile
     command: "python /crawler/edgar/crawler-go.py edgarindex   "
-    environment:
-      - 'CRAWL_YEARS=2018,2019,2020'
-      - 'MONGO_URI=mongodb://13fmongo:27017'
+    env_file:
+      - .env
     depends_on:
       - mongo
 
@@ -26,9 +25,8 @@ services:
       context: .
       dockerfile: Dockerfile
     command: "python /crawler/edgar/crawler-go.py stockinfo   "
-    environment:
-      - 'CRAWL_YEARS=2018,2019,2020'
-      - 'MONGO_URI=mongodb://13fmongo:27017'
+    env_file:
+      - .env
     depends_on:
       - mongo
     restart: always
