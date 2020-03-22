@@ -28,7 +28,7 @@ class MissingFilingSpider(scrapy.Spider):
         index=[r['url'] for r in index]
         present=[r['docurl'] for r in present]
         missing=set(index).difference(set(present))
-        missing=random.shuffle(list(missing)) #Shuffling list of urls to fetch to speed up multi processing when scaling
+        random.shuffle(list(missing)) #Shuffling list of urls to fetch to speed up multi processing when scaling
         self.logger.warning(f'Found {len(missing)} urls missing')
         for url in missing:
             res=filings.find_one({'docurl':url})
