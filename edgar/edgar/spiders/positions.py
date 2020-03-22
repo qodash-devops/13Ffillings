@@ -109,7 +109,7 @@ class MergeSpider(MissingFilingSpider):
 
             filing['positions'] = res_positions
 
-            #Updating missing stock info
+            # Updating missing stock info
             # cusips=list(set(cusips))
             # for cusip in cusips:
             #     info = db['stock_info'].find_one({"cusip": cusip})
@@ -120,7 +120,6 @@ class MergeSpider(MissingFilingSpider):
             #                                      callback=self.parse_cusip)
             #         request.cb_kwargs["cusip"] = cusip
             #         yield request
-
             if len(res_positions)==0:
                 self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
             if len(positions) > 0:

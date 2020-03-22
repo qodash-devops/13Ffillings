@@ -22,12 +22,14 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
 class MissingFilingSpider(scrapy.Spider):
     name = "edgarfilings"
     custom_settings={'DELTAFETCH_ENABLED':False,'JOBDIR':''}
+    n_missing=0
     def start_requests(self):
         index=page_index.aggregate([{"$unwind":"$filings"},{'$project':{'url':"$filings"}}])
         present=filings.find({},{'docurl':1})
         index=[r['url'] for r in index]
         present=[r['docurl'] for r in present]
         missing=set(index).difference(set(present))
+        self.n_missing=len(missing)
         random.shuffle(list(missing)) #Shuffling list of urls to fetch to speed up multi processing when scaling
         self.logger.warning(f'Found {len(missing)} urls missing')
         for url in missing:

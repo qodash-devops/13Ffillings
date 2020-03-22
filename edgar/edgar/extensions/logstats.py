@@ -57,6 +57,11 @@ class LogStats:
             self.infoprev=n_stockinfo
             msg=f"Data scraped stats :(filings={n_filings}@{filing_r}/min, positions={n_positions}@{pos_r}/min,stockinfo={n_stockinfo}@{info_r}/min)"
             logger.info(msg)
+            if filing_r>0:
+                remaining=spider.n_missing-n_filings
+                eta_hours=remaining/filing_r//60
+                eta_minutes=int(remaining/filing_r%60)
+                logger.info(f'ETA: {remaining} filings remain ,processing in {eta_hours}h{eta_minutes}min')
         else:
             items = self.stats.get_value('item_scraped_count', 0)
             pages = self.stats.get_value('response_received_count', 0)

@@ -92,7 +92,7 @@ class PositionsPipeline(EdgarPipeline):
     # @profile
     def process_item(self, item, spider):
         self.spider=spider
-        ## how to handle each filing
+        # ## how to handle each filing
         item_type=item._class.__name__
         if item_type=='x_F13FilingItem':
             for i in range(len(item['positions'])):
