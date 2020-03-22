@@ -92,46 +92,46 @@ class PositionsPipeline(EdgarPipeline):
     # @profile
     def process_item(self, item, spider):
         self.spider=spider
-        ## how to handle each filing
-        item_type=item._class.__name__
-        if item_type=='x_F13FilingItem':
-            for i in range(len(item['positions'])):
-                item['positions'][i]['_id']=ObjectId(('CUS'+item['positions'][i]['cusip']).encode())
-            i=dict(item)
-            key = {'docurl': i['docurl']}
-
-            if len(item['positions']) == 0:
-                update=self.db[self.collection_empty].update(key, i, upsert=True)
-            else:
-                update=self.db[self.collection_name].update(key, i, upsert=True)
-                try:
-                    i['_id']=update['upserted']
-                except:
-                    pass
-                spider.crawler.stats.inc_value('filings')
-
-            #yielding the positions items
-            for p in item['positions']:
-                info=self.db[self.collection_stock_info].find_one({'_id':p['_id']})
-                if not info is None:
-                    self.updatePosition(p,i, info)
-
-
-        elif item_type=='x_StockInfoItem':
-            i=dict(item)
-            key = {'cusip': i['cusip']}
-            try:
-                i['close'], i['info'] = self.get_spots(i['ticker'])
-            except:
-                i['close'] = []
-            i['_id']=ObjectId(('CUS' + i['cusip']).encode())
-            self.db[self.collection_stock_info].update(key, i, upsert=True)
-            filings=self.db[self.collection_name].find({"positions.cusip":i['cusip']})
-            spider.crawler.stats.inc_value('stock_info')
-            for f in filings:
-                for p in f['positions']:
-                    if p['cusip']==i['cusip']:
-                        self.updatePosition(p,f, i)
+        # ## how to handle each filing
+        # item_type=item._class.__name__
+        # if item_type=='x_F13FilingItem':
+        #     for i in range(len(item['positions'])):
+        #         item['positions'][i]['_id']=ObjectId(('CUS'+item['positions'][i]['cusip']).encode())
+        #     i=dict(item)
+        #     key = {'docurl': i['docurl']}
+        #
+        #     if len(item['positions']) == 0:
+        #         update=self.db[self.collection_empty].update(key, i, upsert=True)
+        #     else:
+        #         update=self.db[self.collection_name].update(key, i, upsert=True)
+        #         try:
+        #             i['_id']=update['upserted']
+        #         except:
+        #             pass
+        #         spider.crawler.stats.inc_value('filings')
+        #
+        #     #yielding the positions items
+        #     for p in item['positions']:
+        #         info=self.db[self.collection_stock_info].find_one({'_id':p['_id']})
+        #         if not info is None:
+        #             self.updatePosition(p,i, info)
+        #
+        #
+        # elif item_type=='x_StockInfoItem':
+        #     i=dict(item)
+        #     key = {'cusip': i['cusip']}
+        #     try:
+        #         i['close'], i['info'] = self.get_spots(i['ticker'])
+        #     except:
+        #         i['close'] = []
+        #     i['_id']=ObjectId(('CUS' + i['cusip']).encode())
+        #     self.db[self.collection_stock_info].update(key, i, upsert=True)
+        #     filings=self.db[self.collection_name].find({"positions.cusip":i['cusip']})
+        #     spider.crawler.stats.inc_value('stock_info')
+        #     for f in filings:
+        #         for p in f['positions']:
+        #             if p['cusip']==i['cusip']:
+        #                 self.updatePosition(p,f, i)
 
     def updatePosition(self, position,filing, stockinfo):
         assert position['cusip']==stockinfo['cusip']
