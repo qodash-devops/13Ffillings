@@ -2,7 +2,7 @@ from datetime import datetime
 import colorlog
 import json
 import logging
-import pprint
+from fire import Fire
 import sys
 import time
 import os
@@ -12,6 +12,7 @@ from scrapy_redis import get_redis
 import pymongo
 from edgar.edgar.items import PositionItem
 from edgar.edgar.settings import color_formatter
+from concurrent.futures import ProcessPoolExecutor,as_completed
 import data.yfinance as yf
 
 mongouri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
@@ -25,6 +26,7 @@ logger.setLevel(logging.INFO)
 class Stats:
     _data={}
     _last_log_time=0
+    name=''
     def inc_value(self,key,val=1):
         try:
             self._data[key]+=val
@@ -32,24 +34,31 @@ class Stats:
             self._data[key]=val
     def log(self,interval):
         if time.time()-self._last_log_time>interval:
-            logger.info(f"Statistics:{self._data}")
+            logger.info(f"{self.name}>>Statistics:{self._data}")
             self._last_log_time=time.time()
 
+def pool_worker(class_name,i):
+    w=eval(class_name+'()')
+    w.stats.name=class_name+'_'+str(i)
+    w.run()
+
 class RedisWorker:
-    def __init__(self,keys):
+    def __init__(self,keys,name='redis_worker'):
         self.redis = get_redis(host=redis_host,port=6379)
         self.keys=keys
         self.timeout=10
         self.wait=1
+        self.name=name
         self.stats=Stats()
+        self.stats.name=name
     def run(self):
         logger.info(f'Starting worker:{self.keys}')
         processed = 0
         while True:
-            # Change ``blpop`` to ``brpop`` to process as LIFO.
+            self.stats.log(30)
             ret = self.redis.blpop(self.keys, self.timeout)
-            # If data is found before the timeout then we consider we are done.
             if ret is None:
+                self.stats.inc_value('idle_time(s)',self.wait)
                 time.sleep(self.wait)
                 continue
             source, data = ret
@@ -69,10 +78,12 @@ class RedisWorker:
         raise NotImplemented
 
 class PositionWorker(RedisWorker):
-    def __init__(self):
+    def __init__(self, keys=None):
+        if keys is None:
+            keys = ['positions:items']
         self.client = pymongo.MongoClient(mongouri)
         self.db = self.client['edgar']
-        super().__init__(keys=['positions:items'])
+        super().__init__(keys=keys)
         self.log_interval=30
     def process_item(self,item):
         for i in range(len(item['positions'])):
@@ -158,18 +169,28 @@ class StockInfoWorker(PositionWorker):
     def process_item(self,item):
         i = dict(item)
         key = {'cusip': i['cusip']}
+        if i['ticker']=='':
+            self.db['stock_info'].update(key, i, upsert=True)
+            self.stats.inc_value('stock_info')
+            return
         try:
             i['close'], i['info'] = self.get_spots(i['ticker'])
         except:
             i['close'] = []
         i['_id'] = ObjectId(('CUS' + i['cusip']).encode())
         self.db['stock_info'].update(key, i, upsert=True)
+        self.stats.inc_value('stock_info')
         filings = self.db['filings_13f'].find({"positions.cusip": i['cusip']})
         self.stats.inc_value('stock_info')
+        positions_updates=[]
         for f in filings:
             for p in f['positions']:
                 if p['cusip'] == i['cusip']:
-                    self.updatePosition(p, f, i)
+                    update=self.updatePosition(p, f, i)
+                    if not update is None:
+                        positions_updates.append(update)
+        if len(positions_updates) > 0:
+            self.db['positions'].bulk_write(positions_updates)
         self.stats.log(self.log_interval)
     def get_spots(self,ticker):
         t = yf.Ticker(ticker)
@@ -180,7 +201,21 @@ class StockInfoWorker(PositionWorker):
         close = res.dropna().to_frame().reset_index().to_dict(orient='records')
         return close,info
 
+class WorkerStarter:
+    def run(self,positions=2,stockinfo=2):
+        n_procs=positions+stockinfo
+        pool=ProcessPoolExecutor(n_procs)
+        futures=[]
+        for i in range(positions):
+            f=pool.submit(pool_worker,'PositionWorker',i)
+            futures.append(f)
+        for i in range(stockinfo):
+            f=pool.submit(pool_worker,'StockInfoWorker',i)
+            futures.append(f)
+        for _ in as_completed(futures):
+            pass
+
+
 
 if __name__ == '__main__':
-    W=StockInfoWorker()
-    W.run()
+    Fire(WorkerStarter)

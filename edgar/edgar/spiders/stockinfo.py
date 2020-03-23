@@ -3,6 +3,7 @@ import os
 from ..items import StockInfoItem
 import pymongo
 from random import sample
+from scrapy_redis.spiders import RedisSpider
 mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 client = pymongo.MongoClient(mongo_uri)
 db = client['edgar']
@@ -11,13 +12,13 @@ filings=db['filings_13f']
 
 
 
-class QuantumonlineSpider(scrapy.Spider):
+class QuantumonlineSpider(RedisSpider):
     name = 'stockinfo'
     allowed_domains = ['quantumonline.com']
     batch_size=5000
     # start_urls = ['https://www.quantumonline.com/search.cfm']
     custom_settings = {'DELTAFETCH_ENABLED': False,'JOBDIR':'',
-                       'ITEM_PIPELINES':{'edgar.pipelines.PositionsPipeline': 300}
+                       'ITEM_PIPELINES':{'scrapy_redis.pipelines.RedisPipeline': 400}
                        }
     def _get_missing_cusips(self):
         self.logger.info('Loading missing cusips from mongo...')
@@ -31,6 +32,9 @@ class QuantumonlineSpider(scrapy.Spider):
     def start_requests(self):
         missing_cusips=self._get_missing_cusips()
         n_missing=len(missing_cusips)
+        if n_missing==0:
+            self.logger.warning('No missing cusips')
+            self.crawler.stop()
         if n_missing>self.batch_size:
             missing_cusips=sample(missing_cusips,self.batch_size)
         if len(missing_cusips)>100:
