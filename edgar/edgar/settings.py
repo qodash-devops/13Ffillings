@@ -13,9 +13,6 @@ CONCURRENT_REQUESTS_PER_IP=100
 MONGO_URI=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 MONGO_DATABASE = 'edgar'
 
-DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
-SCHEDULER = "scrapy_redis.scheduler.Scheduler"
-SCHEDULER_PERSIST = True
 
 ITEM_PIPELINES = {
     'edgar.pipelines.EdgarPipeline': 300,
@@ -35,10 +32,6 @@ SPIDER_MIDDLEWARES = {
     'scrapy_deltafetch.DeltaFetch': 100
 }
 DELTAFETCH_ENABLED = True
-
-
-
-
 
 color_formatter = ColoredFormatter(
     (

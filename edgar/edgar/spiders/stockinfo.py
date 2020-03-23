@@ -10,6 +10,7 @@ db = client['edgar']
 stock_info=db['stock_info']
 filings=db['filings_13f']
 
+redis_url=os.environ.get('REDIS_URI','redis://localhost:6379')
 
 
 class QuantumonlineSpider(RedisSpider):
@@ -18,7 +19,11 @@ class QuantumonlineSpider(RedisSpider):
     batch_size=5000
     # start_urls = ['https://www.quantumonline.com/search.cfm']
     custom_settings = {'DELTAFETCH_ENABLED': False,'JOBDIR':'',
-                       'ITEM_PIPELINES':{'scrapy_redis.pipelines.RedisPipeline': 400}
+                       'ITEM_PIPELINES':{'scrapy_redis.pipelines.RedisPipeline': 400},
+                       'REDIS_URL': redis_url,
+                       "DUPEFILTER_CLASS": "scrapy_redis.dupefilter.RFPDupeFilter",
+                       "SCHEDULER": "scrapy_redis.scheduler.Scheduler",
+                       "SCHEDULER_PERSIST": True
                        }
     def _get_missing_cusips(self):
         self.logger.info('Loading missing cusips from mongo...')

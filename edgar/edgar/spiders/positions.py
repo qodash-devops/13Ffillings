@@ -16,6 +16,7 @@ db = client['edgar']
 page_index=db['page_index']
 filings=db['filings_13f']
 
+redis_url=os.environ.get('REDIS_URI','redis://localhost:6379')
 
 def find_element(txt,tag='reportCalendarOrQuarter'):
     res=re.findall(f'<{tag}>[\s\S]*?<\/{tag}>', txt)
@@ -26,10 +27,12 @@ class MergeSpider(RedisSpider):
     name = "positions"
     custom_settings={'DELTAFETCH_ENABLED':False,'JOBDIR':'',
                      'ITEM_PIPELINES':{'scrapy_redis.pipelines.RedisPipeline': 400},
-                     # 'DEPTH_PRIORITY':1,
-                     # 'SCHEDULER_DISK_QUEUE' :'scrapy.squeues.PickleFifoDiskQueue',
-                     # 'SCHEDULER_MEMORY_QUEUE' : 'scrapy.squeues.FifoMemoryQueue'
-                     }
+                     'REDIS_URL' : redis_url,
+                    "DUPEFILTER_CLASS" :"scrapy_redis.dupefilter.RFPDupeFilter" ,
+                    "SCHEDULER" : "scrapy_redis.scheduler.Scheduler",
+                    "SCHEDULER_PERSIST" : True
+
+    }
 
     stock_info={}
     def start_requests(self):
