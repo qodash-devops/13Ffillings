@@ -37,7 +37,6 @@ services:
      - /home/docker/13f/mongo/data/db:/data/db
     ports:
       - 27020:27017
-
   redis:
     image: redis
     ports:
