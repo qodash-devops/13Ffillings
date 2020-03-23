@@ -10,6 +10,7 @@ services:
     restart: always
     depends_on:
       - mongo
+      - redis
   filingindexer:
     build:
       context: .
@@ -28,7 +29,19 @@ services:
       - .env
     depends_on:
       - mongo
+      - redis
     restart: always
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      command: "python /crawler/edgar/edgar/redis_worker.py run"
+      env_file:
+        - .env
+      depends_on:
+        - mongo
+        - redis
+
   mongo:
     image: mongo:latest
     container_name: 13fmongo
