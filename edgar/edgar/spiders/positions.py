@@ -3,6 +3,7 @@ import re,os,pymongo
 from ..items import F13FilingItem,StockInfoItem
 from .filings import MissingFilingSpider
 from datetime import datetime
+from scrapy_redis.spiders import RedisSpider
 import time
 from bson.objectid import ObjectId
 import sys
@@ -21,16 +22,29 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
     res=[r.replace(f'<{tag}>','').replace(f'</{tag}>','') for r in res]
     return res
 
-class MergeSpider(MissingFilingSpider):
+class MergeSpider(RedisSpider):
     name = "positions"
     custom_settings={'DELTAFETCH_ENABLED':False,'JOBDIR':'',
-                     'ITEM_PIPELINES':{'edgar.pipelines.PositionsPipeline': 300},
+                     'ITEM_PIPELINES':{'scrapy_redis.pipelines.RedisPipeline': 400},
                      # 'DEPTH_PRIORITY':1,
                      # 'SCHEDULER_DISK_QUEUE' :'scrapy.squeues.PickleFifoDiskQueue',
                      # 'SCHEDULER_MEMORY_QUEUE' : 'scrapy.squeues.FifoMemoryQueue'
                      }
 
     stock_info={}
+    def start_requests(self):
+        index=page_index.aggregate([{"$unwind":"$filings"},{'$project':{'url':"$filings"}}])
+        present=filings.find({},{'docurl':1})
+        index=[r['url'] for r in index]
+        present=[r['docurl'] for r in present]
+        missing=set(index).difference(set(present))
+        self.n_missing=len(missing)
+        self.logger.warning(f'Found {len(missing)} urls missing')
+        for url in missing:
+            yield scrapy.Request(url=url, callback=self.parse_filing13F)
+
+
+
     def parse_cusip(self, response,cusip):
         try:
             notFound=response.xpath("//*[contains(text(), 'Not Found!')]").get()

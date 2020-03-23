@@ -6,20 +6,19 @@ BOT_NAME = 'edgar'
 SPIDER_MODULES = ['edgar.spiders']
 # NEWSPIDER_MODULE = 'edgar.spiders'
 ROBOTSTXT_OBEY = False
-STATS_DUMP = True
-LOGSTATS_INTERVAL = 60
-AUTOTHROTTLE_ENABLED=True
+
 DOWNLOAD_DELAY = .10
 CONCURRENT_REQUESTS_PER_IP=100
-MEMUSAGE_ENABLED=True
-COOKIES_ENABLED=False
-MEMUSAGE_LIMIT_MB=5000
-TELNETCONSOLE_ENABLED=True
+
 MONGO_URI=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 MONGO_DATABASE = 'edgar'
 
+DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+SCHEDULER = "scrapy_redis.scheduler.Scheduler"
+SCHEDULER_PERSIST = True
+
 ITEM_PIPELINES = {
-    'edgar.pipelines.EdgarPipeline': 300
+    'edgar.pipelines.EdgarPipeline': 300,
 }
 
 EXTENSIONS = {
