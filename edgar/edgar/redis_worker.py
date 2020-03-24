@@ -95,12 +95,10 @@ class PositionWorker(RedisWorker):
             update = self.db['empty_filings'].update(key, i, upsert=True)
         else:
             i['quarter_date']=datetime.strptime(i['quarter_date'], '%Y-%m-%d %H:%M:%S')
-            update = self.db['filings_13f'].update(key, i, upsert=True)
+            # update = self.db['filings_13f'].update(key, i, upsert=True)
+            i = self.db['filings_13f'].find_one_and_replace(key, i, upsert=True,return_document=True)
             self.stats.inc_value('filings')
-            try:
-                i['_id'] = update['upserted']
-            except:
-                pass
+
 
         # yielding the positions items
         positions_updates=[]
@@ -170,15 +168,14 @@ class StockInfoWorker(PositionWorker):
         i = dict(item)
         key = {'cusip': i['cusip']}
         if i['ticker']=='':
-            self.db['stock_info'].update(key, i, upsert=True)
+            i=self.db['stock_info'].find_one_and_replace(key, i, upsert=True, return_document=True)
             self.stats.inc_value('stock_info')
             return
         try:
             i['close'], i['info'] = self.get_spots(i['ticker'])
         except:
             i['close'] = []
-        i['_id'] = ObjectId(('CUS' + i['cusip']).encode())
-        self.db['stock_info'].update(key, i, upsert=True)
+        i=self.db['stock_info'].find_one_and_replace(key, i, upsert=True, return_document=True)
         self.stats.inc_value('stock_info')
         filings = self.db['filings_13f'].find({"positions.cusip": i['cusip']})
         self.stats.inc_value('stock_info')
@@ -214,7 +211,12 @@ class WorkerStarter:
             futures.append(f)
         for _ in as_completed(futures):
             pass
-
+    def positions(self):
+        W=PositionWorker()
+        W.run()
+    def stockinfo(self):
+        W=StockInfoWorker()
+        W.run()
 
 
 if __name__ == '__main__':
