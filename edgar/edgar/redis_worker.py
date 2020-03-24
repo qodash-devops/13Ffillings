@@ -16,7 +16,7 @@ from concurrent.futures import ProcessPoolExecutor,as_completed
 import data.yfinance as yf
 
 mongouri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
-redis_host=os.environ.get('REDIS_HOST','localhost')
+redisuri=os.environ.get('REDIS_URI','redis://localhost:6379')
 logger = logging.getLogger('item_worker')
 handler = colorlog.StreamHandler()
 handler.setFormatter(color_formatter)
@@ -44,7 +44,7 @@ def pool_worker(class_name,i):
 
 class RedisWorker:
     def __init__(self,keys,name='redis_worker'):
-        self.redis = get_redis(host=redis_host,port=6379)
+        self.redis = get_redis(url=redisuri)
         self.keys=keys
         self.timeout=10
         self.wait=1
