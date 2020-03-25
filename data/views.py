@@ -53,8 +53,7 @@ def create_indices():
     logger.info('creating indices...')
     filings.create_index([("filer_name",pymongo.ASCENDING),("positions.cusip", pymongo.ASCENDING)])
     db["positions"].ensure_index([("filer_name",pymongo.ASCENDING),("info.sector",pymongo.ASCENDING),
-                                  ("info.category",pymongo.ASCENDING),("quarter_date",pymongo.ASCENDING)
-                                  ])
+                                  ("info.category",pymongo.ASCENDING),("quarter_date",pymongo.ASCENDING)])
 
 
 
