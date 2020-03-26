@@ -45,6 +45,7 @@ materialized_views=[("positions",[{"$addFields": {"sector":{"$concat": [{"$ifNul
 
 def refresh_materialized_views(collection,pipeline):
     output_col=pipeline[-1]["$out"]
+    logger.info(f'dropping collection {output_col}')
     db[output_col].drop()
     logger.info(f'Updating materialized view on: {collection} => {output_col}')
     db[collection].aggregate(pipeline, allowDiskUse=True)
