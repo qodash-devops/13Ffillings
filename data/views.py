@@ -38,9 +38,13 @@ views = {
 }
 
 materialized_views=[("positions",[{"$addFields": {"sector":{"$concat": [{"$ifNull": [ "$info.sector", "" ]} , {"$ifNull": [ "$info.category", "" ]}]}}},
-                                {"$group": { "_id": {"sector":"$sector","quarter_date":"$quarter_date","filer_name":"$filer_name"},"size":{"$sum":{"$multiply": ["$quantity","$spot"]}},"ticker":{"$sum": 1}}},
-                                {"$project": {"_id":0,"sector":"$_id.sector","quarter_date":"$_id.quarter_date","filer_name":"$_id.filer_name","size":1,"ticker":1}},
-                                { "$out": "positions_by_sector" }])
+                                  {"$group": {"_id": {"sector": "$sector", "quarter_date": "$quarter_date",
+                                                      "filer_name": "$filer_name"},
+                                              "size": {"$sum": {"$multiply": ["$quantity", "$spot"]}},
+                                              "tickers": {"$addToSet": "$ticker"},
+                                              "ntickers":{"$sum":"$ticker"}}},
+                                    {"$project": {"_id":0, "sector":"$_id.sector", "quarter_date":"$_id.quarter_date", "filer_name":"$_id.filer_name", "size":1, "tickers":1, "nticker":1}},
+                                    { "$out": "positions_by_sector" }])
                     ]
 
 def refresh_materialized_views(collection,pipeline):
