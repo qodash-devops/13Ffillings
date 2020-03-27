@@ -6,7 +6,7 @@ from fire import Fire
 import os
 
 
-def run_crawler(crawler="edgar",loglevel="INFO"):
+def run_crawler(crawler="positions",loglevel="INFO"):
     settings = Settings()
     os.environ['SCRAPY_SETTINGS_MODULE'] = 'edgar.settings'
     settings_module_path = os.environ['SCRAPY_SETTINGS_MODULE']

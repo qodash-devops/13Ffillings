@@ -133,6 +133,7 @@ class PositionWorker(RedisWorker):
             pos['filer_cik']=filing['filer_cik']
 
             pos['quantity']=position['quantity']
+            pos['class']=position['class']
             pos['cusip']=position['cusip']
             pos['ticker']=stockinfo['ticker']
             quarter_idx=np.argmin(abs(np.array([pp['index'] for pp in stockinfo['close']])-filing['quarter_date']))

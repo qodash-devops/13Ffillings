@@ -111,6 +111,8 @@ class MergeSpider(RedisSpider):
                 self.logger.warning(f"Filing with {len(positions)} positions URL={response.url}")
             cusips=[]
             for p in positions:
+                titleclass = find_element(p, 'titleOfClass')[0]
+
                 stock_name = find_element(p,  'nameOfIssuer')[0]
                 stock_cusip = find_element(p,  'cusip')[0]
                 cusips.append(stock_cusip)
@@ -122,21 +124,10 @@ class MergeSpider(RedisSpider):
                     pass
                 put_call = find_element(p, 'putCall')
                 res_positions.append({'name': stock_name, 'cusip': stock_cusip, 'symbol': '',
-                                      'quantity': n_shares, 'callput': put_call})
+                                      'quantity': n_shares, 'callput': put_call,'class':titleclass})
 
             filing['positions'] = res_positions
 
-            # Updating missing stock info
-            # cusips=list(set(cusips))
-            # for cusip in cusips:
-            #     info = db['stock_info'].find_one({"cusip": cusip})
-            #     if info is None:
-            #         h = {"Content-Type": "application/x-www-form-urlencoded"}
-            #         request = scrapy.FormRequest(url='https://www.quantumonline.com/search.cfm',
-            #                                      formdata={"sopt": "cusip", "tickersymbol": cusip}, headers=h,
-            #                                      callback=self.parse_cusip)
-            #         request.cb_kwargs["cusip"] = cusip
-            #         yield request
             if len(res_positions)==0:
                 self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
             if len(positions) > 0:
