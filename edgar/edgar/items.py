@@ -32,7 +32,7 @@ class PositionItem(scrapy.Item):
     ticker=scrapy.Field()
     cusip=scrapy.Field()
     info=scrapy.Field()
-
+    instrumentclass=scrapy.Field()
     spot=scrapy.Field()
     spot_date=scrapy.Field()
     next_quarter_spot=scrapy.Field()
