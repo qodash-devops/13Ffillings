@@ -56,3 +56,4 @@ class PageIndexItem(scrapy.Item):
     year=scrapy.Field()
     filings=scrapy.Field()
     n_filings=scrapy.Field()
+

@@ -50,8 +50,21 @@ services:
     restart: always
     volumes:
      - /home/docker/13f/mongo/data/db:/data/db
+     - /home/docker/13f/mongo_backups:/var/backups
     ports:
       - 27020:27017
+    depends_on:
+      - jobscheduler
+  jobscheduler:
+    image: 'mcuadros/ofelia:latest'
+    container_name: "13f_jobscheduler"
+    volumes:
+      - ./data/backup_conf.ini:/etc/ofelia/config.ini
+      - /var/run/docker.sock:/var/run/docker.sock
+      - /home/docker/13f/ofelia/logs:/tmp/logs
+    restart: always
+
+
   redis:
     image: redis
     ports:
@@ -68,3 +81,4 @@ services:
     - 3000:3000
     depends_on:
       - mongo
+

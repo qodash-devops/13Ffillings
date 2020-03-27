@@ -173,5 +173,3 @@ class PositionsPipeline(EdgarPipeline):
 
         except:
             self.spider.logger.error(f"getting position reason={sys.exc_info()}")
-
-

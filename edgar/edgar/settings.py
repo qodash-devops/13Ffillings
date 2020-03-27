@@ -33,6 +33,7 @@ SPIDER_MIDDLEWARES = {
 }
 DELTAFETCH_ENABLED = True
 
+
 color_formatter = ColoredFormatter(
     (
         '%(log_color)s%(levelname)-5s%(reset)s '
