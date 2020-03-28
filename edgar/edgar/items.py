@@ -16,9 +16,9 @@ class F13FilingItem(scrapy.Item):
     positions =scrapy.Field()
     quarter_date=scrapy.Field()
     quarter=scrapy.Field()
-    year=scrapy.Field()
+    filingyear=scrapy.Field()
     symbol=scrapy.Field()
-    docurl=scrapy.Field()
+    filingurl=scrapy.Field()
 
 class PositionItem(scrapy.Item):
     filing_id=scrapy.Field()

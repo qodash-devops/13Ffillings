@@ -12,3 +12,4 @@ colorlog
 tqdm
 requests
 multitasking
+requests_ntlm

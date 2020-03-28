@@ -12,7 +12,7 @@ CONCURRENT_REQUESTS_PER_IP=100
 
 ELASTICSEARCH_SERVERS = [os.environ.get('ES_SERVER','http://localhost:9200')]
 ITEM_PIPELINES = {
-    'scrapyelasticsearch.scrapyelasticsearch.ElasticSearchPipeline': 200
+    'edgar.pipelines.ElasticSearchPipeline': 200
 }
 
 EXTENSIONS = {

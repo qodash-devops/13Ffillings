@@ -12,6 +12,8 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
+    volumes:
+    - /home/docker/13f/es/data:/usr/share/elasticsearch/data
     external_links:
       - 13fmongo
   kibana:
@@ -20,33 +22,7 @@ services:
       - "5601:5601"
     depends_on:
       - elasticsearch
-#  transport:
-#    build: ./transporter
-#    environment:
-#      - DB_NAME=edgar
-#      - MONGODB_URI=mongodb://13fmongo:27017
-#      - ELASTICSEARCH_URI=y
-#    depends_on:
-#      - elasticsearch
-#    external_links:
-#      - 13fmongo
-#  abc:
-#    image: appbaseio/abc
-#    command: 'import --src_type=mongodb --src_uri="mongodb://13fmongo:27017/edgar" "http://elasticsearch:9200/edgar"'
-#    depends_on:
-#      - elasticsearch
-#    external_links:
-#      - 13fmongo
-#    entrypoint: "tail -f /dev/null"
-#    command: "import"
 
-
-  dejavu:
-    image: appbaseio/dejavu
-    ports:
-    - "1358:1358"
-    depends_on:
-      - elasticsearch
 
 networks:
   default:
