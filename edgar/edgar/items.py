@@ -52,8 +52,8 @@ class StockInfoItem(scrapy.Item):
 class PageIndexItem(scrapy.Item):
     index=scrapy.Field()
     quarter=scrapy.Field()
-    day=scrapy.Field()
+    publishdate=scrapy.Field()
     year=scrapy.Field()
-    filings=scrapy.Field()
-    n_filings=scrapy.Field()
+    url=scrapy.Field()
+    doc_type=scrapy.Field()
 

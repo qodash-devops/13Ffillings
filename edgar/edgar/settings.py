@@ -6,16 +6,13 @@ BOT_NAME = 'edgar'
 SPIDER_MODULES = ['edgar.spiders']
 # NEWSPIDER_MODULE = 'edgar.spiders'
 ROBOTSTXT_OBEY = False
-
 DOWNLOAD_DELAY = .10
 CONCURRENT_REQUESTS_PER_IP=100
 
-MONGO_URI=os.environ.get('MONGO_URI','mongodb://localhost:27020')
-MONGO_DATABASE = 'edgar'
 
-
+ELASTICSEARCH_SERVERS = [os.environ.get('ES_SERVER','http://localhost:9200')]
 ITEM_PIPELINES = {
-    'edgar.pipelines.EdgarPipeline': 300,
+    'scrapyelasticsearch.scrapyelasticsearch.ElasticSearchPipeline': 200
 }
 
 EXTENSIONS = {
@@ -26,14 +23,18 @@ EXTENSIONS = {
 LOG_LEVEL = 'INFO'
 LOG_FORMAT = '%(levelname)s: %(message)s'
 
-YEARS=os.environ.get('CRAWL_YEARS','2019').split(',')
-
-SPIDER_MIDDLEWARES = {
-    'scrapy_deltafetch.DeltaFetch': 100
-}
-DELTAFETCH_ENABLED = True
+YEARS=os.environ.get('CRAWL_YEARS','2018,2019,2020').split(',')
 
 
+
+
+
+
+
+
+
+#########################################
+# LOGS
 color_formatter = ColoredFormatter(
     (
         '%(log_color)s%(levelname)-5s%(reset)s '

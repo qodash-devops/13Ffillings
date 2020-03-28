@@ -6,10 +6,6 @@ import sys
 quarters={3:'Q1',6:'Q2',9:'Q3',12:'Q4'}
 quarters_to_parse=[1,2,3,4]
 
-mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
-client = pymongo.MongoClient(mongo_uri)
-db = client['edgar']
-page_index=db['page_index']
 
 
 def find_element(txt,tag='reportCalendarOrQuarter'):
@@ -18,9 +14,13 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
     return res
 
 class EdgarIndexSpider(scrapy.Spider):
-    name = "edgarindex"
-    custom_settings={'DELTAFETCH_ENABLED':False}
+    name = "indexer"
     pipeline=[]
+    custom_settings = {
+        'ELASTICSEARCH_INDEX' : '13f_index',
+        'ELASTICSEARCH_TYPE' : 'page_index',
+        'ELASTICSEARCH_UNIQ_KEY' : 'url'}
+
     def start_requests(self):
         years = self.settings.get('YEARS')
         urls = []
@@ -48,12 +48,7 @@ class EdgarIndexSpider(scrapy.Spider):
         q = re.findall('QTR\d', response.url)[0]
         y = re.findall('/\d\d\d\d/', response.url)[0].strip('/')
         d = datetime.strptime(response.url.split('.')[-2], '%Y%m%d')
-        item=PageIndexItem()
-        item['index']=response.url
-        item['quarter']=q
-        item['day']=d
-        item['year']=y
-        f_list=[]
+
 
         for i in range(len(lines)):
             if '13F' in lines[i]:
@@ -62,9 +57,15 @@ class EdgarIndexSpider(scrapy.Spider):
                     self.logger.warning(f'could not fetch url from :{lines[i]}')
                     continue
                 url = 'https://www.sec.gov/Archives/' + url[0]
-                f_list.append(url)
-        item['n_filings'] = len(f_list)
-        item['filings']=f_list
-        yield item
+
+                item = PageIndexItem()
+                item['index'] = response.url
+                item['quarter'] = q
+                item['publishdate'] = d
+                item['year'] = y
+                item['url'] = url
+                item['doc_type'] = lines[i].split('  ')[0]
+                yield item
+
 
 
