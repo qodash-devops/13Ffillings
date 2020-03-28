@@ -5,15 +5,12 @@ services:
     container_name: 13fes
     environment:
       - discovery.type=single-node
-    ulimits:
-      memlock:
-        soft: -1
-        hard: -1
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
-    - "/home/docker/13f/es/data:/usr/share/elasticsearch/data:rw"
+    - "/home/docker/13f/es/data:/usr/share/elasticsearch/data"
+    - "/home/docker/13f/es/logs:/usr/share/elasticsearch/logs"
     external_links:
       - 13fmongo
   kibana:
