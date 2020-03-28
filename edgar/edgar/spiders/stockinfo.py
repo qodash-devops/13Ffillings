@@ -1,49 +1,35 @@
 import scrapy
-import os
 from ..items import StockInfoItem
-import pymongo
-from random import sample
-from scrapy_redis.spiders import RedisSpider
-mongo_uri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
-client = pymongo.MongoClient(mongo_uri)
-db = client['edgar']
-stock_info=db['stock_info']
-filings=db['filings_13f']
-
-redis_url=os.environ.get('REDIS_URI','redis://localhost:6379')
+from ..es import ESDB
+es=ESDB()
 
 
-class QuantumonlineSpider(RedisSpider):
+class QuantumonlineSpider(scrapy.Spider):
     name = 'stockinfo'
+    es_index= name
     allowed_domains = ['quantumonline.com']
-    batch_size=5000
-    # start_urls = ['https://www.quantumonline.com/search.cfm']
-    custom_settings = {'DELTAFETCH_ENABLED': False,'JOBDIR':'',
-                       'ITEM_PIPELINES':{'scrapy_redis.pipelines.RedisPipeline': 400},
-                       'REDIS_URL': redis_url,
-                       "DUPEFILTER_CLASS": "scrapy_redis.dupefilter.RFPDupeFilter",
-                       "SCHEDULER": "scrapy_redis.scheduler.Scheduler",
-                       "SCHEDULER_PERSIST": True
-                       }
+    custom_settings = {
+        'ELASTICSEARCH_INDEX': es_index,
+        'ELASTICSEARCH_TYPE': 'stockinfo',
+        'ELASTICSEARCH_BUFFER_LENGTH': 10,
+        'ELASTICSEARCH_UNIQ_KEY': 'cusip',
+        'ITEM_PIPELINES' : {
+                'edgar.pipelines.InfoPipeline':100,
+                'edgar.pipelines.ElasticSearchPipeline': 200
+        }
+
+    }
+
     def _get_missing_cusips(self):
-        self.logger.info('Loading missing cusips from mongo...')
-        filings.ensure_index([("positions.cusip", pymongo.DESCENDING)])
-        all_cusips = filings.distinct("positions.cusip")
-        all_cusips = list(all_cusips)
-        present = [c['cusip'] for c in list(stock_info.find({}, {"cusip": 1}))]
-        missing = [c for c in all_cusips if (not c in present) and (not c is None) ]
-        return sorted(missing)
+
+        all_cusips = es.get_filings_cusips()
+        existing=es.get_info_cusips()
+        missing = list(set(all_cusips)-set(existing))
+        return missing
 
     def start_requests(self):
         missing_cusips=self._get_missing_cusips()
         n_missing=len(missing_cusips)
-        if n_missing==0:
-            self.logger.warning('No missing cusips')
-            self.crawler.stop()
-        if n_missing>self.batch_size:
-            missing_cusips=sample(missing_cusips,self.batch_size)
-        if len(missing_cusips)>100:
-            self.logger.warning(f'loading {len(missing_cusips)} cusips , ({n_missing}) total missing')
         for c in missing_cusips:
             h={"Content-Type":"application/x-www-form-urlencoded"}
             request=scrapy.FormRequest(url='https://www.quantumonline.com/search.cfm',formdata={"sopt":"cusip","tickersymbol":c},headers=h,callback=self.parse_cusip)

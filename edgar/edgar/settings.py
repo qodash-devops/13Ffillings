@@ -15,11 +15,7 @@ ITEM_PIPELINES = {
     'edgar.pipelines.ElasticSearchPipeline': 200
 }
 
-EXTENSIONS = {
-    'edgar.extensions.logstats.LogStats': 100,
-    'scrapy.extensions.corestats.LogStats':None
-}
-
+LOGSTATS_INTERVAL=30
 LOG_LEVEL = 'INFO'
 LOG_FORMAT = '%(levelname)s: %(message)s'
 
@@ -37,9 +33,9 @@ YEARS=os.environ.get('CRAWL_YEARS','2018,2019,2020').split(',')
 # LOGS
 color_formatter = ColoredFormatter(
     (
-        '%(log_color)s%(levelname)-5s%(reset)s '
+        '%(bold_blue)s%(name)s >>%(reset)s %(log_color)s%(levelname)-5s>>%(reset)s '
         '%(yellow)s[%(asctime)s]%(reset)s'
-        '%(white)s %(name)s %(funcName)s %(bold_purple)s:%(lineno)d%(reset)s '
+        '%(white)s %(funcName)s'
         '%(log_color)s%(message)s%(reset)s'
     ),
     datefmt='%y-%m-%d %H:%M:%S',

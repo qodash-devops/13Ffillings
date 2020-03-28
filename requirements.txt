@@ -5,11 +5,10 @@ lxml
 pymongo
 requests
 Scrapy
-scrapy_redis
-scrapy-deltafetch
 fire
 colorlog
 tqdm
 requests
 multitasking
 requests_ntlm
+elasticsearch

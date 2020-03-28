@@ -18,12 +18,57 @@ class ESDB:
         else:
             self.es.indices.create(index)
 
+
+    def get_index_urls(self):
+        urls = []
+        resp = helpers.scan(self.es, index="13f_index", query={"_source": "index"}, size=1000)
+        for r in resp:
+            urls.append(r["_source"]["index"])
+        return list(set(urls))
+
     def get_filing_urls(self):
         urls=[]
         resp=helpers.scan(self.es,index="13f_index",query={"_source":"url"},size=1000)
         for r in resp:
             urls.append(r["_source"]["url"])
         return urls
+
+    def get_filings_cusips(self):
+        cusips=[]
+        q={
+              "_source": "positions.cusip",
+              "aggs": {
+                "cusips": {
+                  "terms": {
+                    "field": "positions.cusip.keyword",
+                    "size": 10
+                  }
+                }
+              }
+            }
+        resp=helpers.scan(self.es,index='13f_filings',query=q,size=100)
+        for res in resp:
+            cusips+=[c['cusip'] for c in res['_source']['positions']]
+        cusips=list(set(cusips))
+        return cusips
+    def get_info_cusips(self):
+        cusips = []
+        q = {
+            "_source": "cusip",
+            "aggs": {
+                "cusips": {
+                    "terms": {
+                        "field": "cusip.keyword",
+                        "size": 10
+                    }
+                }
+            }
+        }
+        resp = helpers.scan(self.es, index='stockinfo', query=q, size=100)
+        cusips=set([r['_source']['cusip'] for r in resp])
+        cusips = list(cusips)
+        return cusips
+
     def get_url(self,url,index='13f_index',field_name='filingurl'):
         q={"query":{
                     "bool":{
@@ -64,7 +109,7 @@ class ESDB:
 
 if __name__ == '__main__':
     DB=ESDB()
-    DB.create_index('test_index')
+    DB.get_positions_cusips()
     # res=(DB.get_filing_urls())
     # res=DB.get_url(res[0])
     # DB.remove_url(res['url'])

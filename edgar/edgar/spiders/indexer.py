@@ -1,12 +1,12 @@
 import scrapy
-import re,os,pymongo
+import re
 from ..items import PageIndexItem
+from ..es import ESDB
 from datetime import datetime
-import sys
 quarters={3:'Q1',6:'Q2',9:'Q3',12:'Q4'}
 quarters_to_parse=[1,2,3,4]
 
-
+es=ESDB()
 
 def find_element(txt,tag='reportCalendarOrQuarter'):
     res=re.findall(f'<{tag}>[\s\S]*?<\/{tag}>', txt)
@@ -16,20 +16,20 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
 class EdgarIndexSpider(scrapy.Spider):
     name = "indexer"
     es_index='13f_index'
-    pipeline=[]
+    existing_indices=[]
     custom_settings = {
         'ELASTICSEARCH_INDEX' : es_index,
         'ELASTICSEARCH_TYPE' : 'page_index',
         'ELASTICSEARCH_UNIQ_KEY' : 'url'}
 
     def start_requests(self):
-
+        es.create_index(self.es_index,existok=True)
+        self.existing_indices = es.get_index_urls()
         years = self.settings.get('YEARS')
         urls = []
         for y in years:
             self.logger.info(f"Scraping YEAR={y}")
             for q in ['QTR' + str(i) for i in [1, 2, 3, 4]]:
-                self.logger.info(f"Scraping QUARTER={y}/{q}")
                 url = f'https://www.sec.gov/Archives/edgar/daily-index/{y}/{q}/'
                 urls.append(url)
         for url in urls:
@@ -42,7 +42,8 @@ class EdgarIndexSpider(scrapy.Spider):
             link_url = l.attrib['href']
             if ('form.' in link_url and '.idx' in link_url):
                 next_page = response.urljoin(link_url)
-                yield response.follow(next_page, callback=self.parse_daily,dont_filter=True)
+                if not next_page in self.existing_indices:
+                    yield response.follow(next_page, callback=self.parse_daily,dont_filter=True)
 
 
     def parse_daily(self, response):

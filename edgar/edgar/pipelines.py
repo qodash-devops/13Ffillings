@@ -5,6 +5,7 @@ from elasticsearch import Elasticsearch, helpers
 from six import string_types
 import hashlib
 import types
+import data.yfinance as yf
 
 
 class InvalidSettingsException(Exception):
@@ -139,3 +140,33 @@ class ElasticSearchPipeline(object):
     def close_spider(self, spider):
         if len(self.items_buffer):
             self.send_items()
+
+
+class InfoPipeline(object):
+    logger=None
+    @classmethod
+    def from_crawler(cls, crawler):
+        ext = cls()
+        ext.settings = crawler.settings
+        ext.logger = crawler.spider.logger
+        return ext
+    def process_item(self, item, spider):
+        assert spider.name=='stockinfo'
+        if item['ticker']!='':
+            close,info=self.get_spots(item['ticker'])
+            item['close']=close
+            item['info']=info
+        return item
+
+    def get_spots(self,ticker):
+        try:
+            t = yf.Ticker(ticker)
+            info=t.info
+            res = t.history(period="3y")
+            res = res["Close"]
+            res.index = res.index.to_pydatetime()
+            close = res.dropna().to_frame().reset_index().to_dict(orient='records')
+            return close,info
+        except:
+            self.logger.error('getting spots for ticker:'+ticker)
+            return {},{}

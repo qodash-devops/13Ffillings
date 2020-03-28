@@ -1,87 +1,38 @@
 version: '3.7'
 services:
-  positionscrawler:
+  crawler:
     build:
       context: .
       dockerfile: Dockerfile
-    command: "python /crawler/edgar/crawler-go.py positions   "
+    entrypoint: "python /crawler/edgar/crawler-go.py "
     env_file:
       - .env
     restart: always
-    depends_on:
-      - mongo
-      - redis
-      - filingindexer
-  filingindexer:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: "python /crawler/edgar/crawler-go.py edgarindex   "
-    env_file:
-      - .env
-    depends_on:
-      - mongo
-  stockinfo:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: "python /crawler/edgar/crawler-go.py stockinfo   "
-    env_file:
-      - .env
-    depends_on:
-      - positionscrawler
-      - mongo
-      - redis
-    restart: always
-  worker:
-    build:
-      context: .
-      dockerfile: Dockerfile
-    command: "python /crawler/edgar/edgar/redis_worker.py run"
-    env_file:
-      - .env
-    depends_on:
-      - mongo
-      - redis
-
-  mongo:
-    image: mongo:latest
-    container_name: 13fmongo
-    restart: always
-    volumes:
-     - /home/docker/13f/mongo/data/db:/data/db
-     - /home/docker/13f/mongo_backups:/var/backups
-    ports:
-      - 27020:27017
-    depends_on:
-      - jobscheduler
-    command: --replSet rs0
-  jobscheduler:
-    image: 'mcuadros/ofelia:latest'
-    container_name: "13f_jobscheduler"
-    volumes:
-      - ./data/backup_conf.ini:/etc/ofelia/config.ini
-      - /var/run/docker.sock:/var/run/docker.sock
-      - /home/docker/13f/ofelia/logs:/tmp/logs
-    restart: always
-
-
-  redis:
-    image: redis
-    ports:
-      - "6379:6379"
-  metabase:
-    image: metabase/metabase
-    container_name: edgar-metabase
-    restart: always
+    links:
+      - elasticsearch
+  elasticsearch:
+    image: elasticsearch:7.6.1
+    container_name: 13fes
     environment:
-      - 'MB_DB_FILE=/metabase-data/metabase.db'
-    volumes:
-    - /home/docker/metabase-data:/metabase-data
+      - discovery.type=single-node
     ports:
-    - 3000:3000
+      - "9200:9200"
+      - "9300:9300"
+    volumes:
+      - "esdata1:/usr/share/elasticsearch"
+  kibana:
+    image: kibana:7.6.1
+    shm_size: 5g
+    ports:
+      - "5601:5601"
     depends_on:
-      - mongo
+        - elasticsearch
+
+volumes:
+  esdata1:
+    driver: local
+
+
 
 networks:
   default:
