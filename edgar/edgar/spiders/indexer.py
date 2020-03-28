@@ -15,13 +15,15 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
 
 class EdgarIndexSpider(scrapy.Spider):
     name = "indexer"
+    es_index='13f_index'
     pipeline=[]
     custom_settings = {
-        'ELASTICSEARCH_INDEX' : '13f_index',
+        'ELASTICSEARCH_INDEX' : es_index,
         'ELASTICSEARCH_TYPE' : 'page_index',
         'ELASTICSEARCH_UNIQ_KEY' : 'url'}
 
     def start_requests(self):
+
         years = self.settings.get('YEARS')
         urls = []
         for y in years:

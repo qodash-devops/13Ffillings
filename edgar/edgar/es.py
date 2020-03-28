@@ -24,12 +24,12 @@ class ESDB:
         for r in resp:
             urls.append(r["_source"]["url"])
         return urls
-    def get_url(self,url,index='13f_index'):
+    def get_url(self,url,index='13f_index',field_name='filingurl'):
         q={"query":{
                     "bool":{
                         "should":[
                            {"match_phrase": {
-                              "url": url
+                              field_name: url
                             }}
                         ]
                     }

@@ -9,8 +9,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-    - "/home/docker/13f/es/data:/usr/share/elasticsearch/data"
-    - "/home/docker/13f/es/logs:/usr/share/elasticsearch/logs"
+    - "esdata1:/usr/share/elasticsearch"
     external_links:
       - 13fmongo
   kibana:
@@ -21,6 +20,9 @@ services:
     depends_on:
       - elasticsearch
 
+volumes:
+  esdata1:
+    driver: local
 
 networks:
   default:
