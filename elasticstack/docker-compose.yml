@@ -12,8 +12,8 @@ services:
     ports:
       - "9200:9200"
       - "9300:9300"
-#    volumes:
-#    - "/home/docker/13f/es/data:/usr/share/elasticsearch/data"
+    volumes:
+    - "/home/docker/13f/es/data:/usr/share/elasticsearch/data:rw"
     external_links:
       - 13fmongo
   kibana:
