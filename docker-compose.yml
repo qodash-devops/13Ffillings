@@ -55,6 +55,7 @@ services:
       - 27020:27017
     depends_on:
       - jobscheduler
+    command: --replSet rs0
   jobscheduler:
     image: 'mcuadros/ofelia:latest'
     container_name: "13f_jobscheduler"
@@ -82,3 +83,6 @@ services:
     depends_on:
       - mongo
 
+networks:
+  default:
+    name: 13fnet

@@ -1,0 +1,57 @@
+version: '3.7'
+services:
+  elasticsearch:
+    image: elasticsearch:7.5.0
+    container_name: 13fes
+    environment:
+      - discovery.type=single-node
+      - http.cors.enabled=true
+      - http.cors.allow-origin=http://localhost:1358,http://127.0.0.1:1358
+      - http.cors.allow-headers=X-Requested-With,X-Auth-Token,Content-Type,Content-Length,Authorization
+      - http.cors.allow-credentials=true
+    ulimits:
+      memlock:
+        soft: -1
+        hard: -1
+    ports:
+      - "9200:9200"
+      - "9300:9300"
+    external_links:
+      - 13fmongo
+  kibana:
+    image: kibana:7.5.0
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+  transport:
+    build: ./transporter
+    environment:
+      - DB_NAME=edgar
+      - MONGODB_URI=mongodb://13fmongo:27017
+      - ELASTICSEARCH_URI=y
+    depends_on:
+      - elasticsearch
+    external_links:
+      - 13fmongo
+  abc:
+    image: appbaseio/abc
+    command: 'import --src_type=mongodb --src_uri="mongodb://13fmongo:27017/edgar" "http://elasticsearch:9200/edgar"'
+    depends_on:
+      - elasticsearch
+    external_links:
+      - 13fmongo
+#    entrypoint: "tail -f /dev/null"
+#    command: "import"
+
+
+  dejavu:
+    image: appbaseio/dejavu
+    ports:
+    - "1358:1358"
+    depends_on:
+      - elasticsearch
+
+networks:
+  default:
+    name: 13fnet
