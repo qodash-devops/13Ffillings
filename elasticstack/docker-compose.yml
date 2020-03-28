@@ -13,7 +13,7 @@ services:
       - "9200:9200"
       - "9300:9300"
     volumes:
-    - /home/docker/13f/es/data:/usr/share/elasticsearch/data
+    - /home/docker/13f/es/data:/usr/share/elasticsearch/data:rw
     external_links:
       - 13fmongo
   kibana:
