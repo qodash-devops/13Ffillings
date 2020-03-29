@@ -1,10 +1,13 @@
 import scrapy
+import os
 from ..items import StockInfoItem
 from ..es import ESDB
+from scrapy_redis.spiders import RedisSpider
 es=ESDB()
 
+redis_url=os.environ.get('REDIS_URI','redis://localhost:6379')
 
-class QuantumonlineSpider(scrapy.Spider):
+class QuantumonlineSpider(RedisSpider):
     name = 'stockinfo'
     es_index= '13f_stockinfo'
     allowed_domains = ['quantumonline.com']
@@ -13,9 +16,14 @@ class QuantumonlineSpider(scrapy.Spider):
         'ELASTICSEARCH_TYPE': 'stockinfo',
         'ELASTICSEARCH_BUFFER_LENGTH': 10,
         'ELASTICSEARCH_UNIQ_KEY': 'cusip',
+        'REDIS_URL': redis_url,
+        "SCHEDULER": "scrapy_redis.scheduler.Scheduler",
+        'DUPEFILTER_CLASS' : "scrapy_redis.dupefilter.RFPDupeFilter",
+        "SCHEDULER_PERSIST": True,
         'ITEM_PIPELINES' : {
                 'edgar.pipelines.InfoPipeline':100,
-                'edgar.pipelines.ElasticSearchPipeline': 200
+                'edgar.pipelines.ElasticSearchPipeline': 200,
+                'scrapy_redis.pipelines.RedisPipeline': 300
         }
 
     }

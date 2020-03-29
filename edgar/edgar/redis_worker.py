@@ -7,21 +7,21 @@ import sys
 import time
 import os
 import numpy as np
-from bson.objectid import ObjectId
 from scrapy_redis import get_redis
-import pymongo
 from edgar.edgar.items import PositionItem
 from edgar.edgar.settings import color_formatter
 from concurrent.futures import ProcessPoolExecutor,as_completed
 import data.yfinance as yf
+from .es import ESDB
 
-mongouri=os.environ.get('MONGO_URI','mongodb://localhost:27020')
 redisuri=os.environ.get('REDIS_URI','redis://localhost:6379')
 logger = logging.getLogger('item_worker')
 handler = colorlog.StreamHandler()
 handler.setFormatter(color_formatter)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
+
+positions_index='13f_positions'
 
 class Stats:
     _data={}
@@ -77,54 +77,30 @@ class RedisWorker:
     def process_item(self,item):
         raise NotImplemented
 
-class PositionWorker(RedisWorker):
+class FilingsWorker(RedisWorker):
     def __init__(self, keys=None):
         if keys is None:
             keys = ['positions:items']
-        self.client = pymongo.MongoClient(mongouri)
-        self.db = self.client['edgar']
+        self.es=ESDB()
         super().__init__(keys=keys)
         self.log_interval=30
     def process_item(self,item):
-        for i in range(len(item['positions'])):
-            item['positions'][i]['_id'] = ObjectId(('CUS' + item['positions'][i]['cusip']).encode())
         i = dict(item)
-        key = {'docurl': i['docurl']}
-
-        if len(item['positions']) == 0:
-            update = self.db['empty_filings'].update(key, i, upsert=True)
-        else:
-            i['quarter_date']=datetime.strptime(i['quarter_date'], '%Y-%m-%d %H:%M:%S')
-            # update = self.db['filings_13f'].update(key, i, upsert=True)
-            i = self.db['filings_13f'].find_one_and_replace(key, i, upsert=True,return_document=True)
-            self.stats.inc_value('filings')
-
-
-        # yielding the positions items
         positions_updates=[]
         for p in item['positions']:
-            info = self.db['stock_info'].find_one({'_id': p['_id']})
+            info = self.es.get_info(p['cusip'])
             if not info is None:
                 update=self.updatePosition(p, i, info)
                 if not update is None:
                     positions_updates.append(update)
         if len(positions_updates)>0:
-            self.db['positions'].bulk_write(positions_updates)
+            self.es.es.bulk(positions_updates,positions_index)
         self.stats.log(self.log_interval)
 
     def updatePosition(self, position,filing, stockinfo):
         assert position['cusip']==stockinfo['cusip']
-        if len(stockinfo['close'])==0:
-            try:
-                ticker=stockinfo['ticker']
-            except:
-                ticker='Notfound'
-            # self.spider.logger.warning(f"No spots for cusip={position['cusip']} ticker={ticker} name=\"{position['name']}\"")
-            return
         pos = PositionItem()
         try:
-            pos['filing_id'] = filing['_id']
-            pos['stockinfo_id']=stockinfo['_id']
             pos['info']=stockinfo['info']
             pos['quarter_date']=filing['quarter_date']
             pos['quarter']=filing['quarter']
@@ -150,7 +126,7 @@ class PositionWorker(RedisWorker):
             keys = {'filing_id': pos['filing_id'], 'cusip': pos['cusip']}
 
             # update=pymongo.ReplaceOne(keys, pos, upsert=True)
-            update=pymongo.InsertOne(dict(pos))
+            update={} #TODO implement update for elastic search
             self.stats.inc_value('positions')
             return update
         except KeyboardInterrupt:
@@ -159,27 +135,14 @@ class PositionWorker(RedisWorker):
             logger.error(f"getting position reason={sys.exc_info()}")
 
 
-class StockInfoWorker(PositionWorker):
+class StockInfoWorker(FilingsWorker):
     def __init__(self):
-        self.client = pymongo.MongoClient(mongouri)
-        self.db = self.client['edgar']
+        self.es=ESDB()
         super().__init__(keys=['stockinfo:items'])
         self.log_interval = 30
     def process_item(self,item):
         i = dict(item)
-        key = {'cusip': i['cusip']}
-        if i['ticker']=='':
-            i=self.db['stock_info'].find_one_and_replace(key, i, upsert=True, return_document=True)
-            self.stats.inc_value('stock_info')
-            return
-        try:
-            i['close'], i['info'] = self.get_spots(i['ticker'])
-        except:
-            i['close'] = []
-        i=self.db['stock_info'].find_one_and_replace(key, i, upsert=True, return_document=True)
-        self.stats.inc_value('stock_info')
-        filings = self.db['filings_13f'].find({"positions.cusip": i['cusip']})
-        self.stats.inc_value('stock_info')
+        filings = self.es.get_filings_position(i['cusip'])
         positions_updates=[]
         for f in filings:
             for p in f['positions']:
@@ -188,16 +151,8 @@ class StockInfoWorker(PositionWorker):
                     if not update is None:
                         positions_updates.append(update)
         if len(positions_updates) > 0:
-            self.db['positions'].bulk_write(positions_updates)
+            self.es.es.bulk(positions_updates,)
         self.stats.log(self.log_interval)
-    def get_spots(self,ticker):
-        t = yf.Ticker(ticker)
-        info=t.info
-        res = t.history(period="3y")
-        res = res["Close"]
-        res.index = res.index.to_pydatetime()
-        close = res.dropna().to_frame().reset_index().to_dict(orient='records')
-        return close,info
 
 class WorkerStarter:
     def run(self,positions=2,stockinfo=2):
@@ -213,7 +168,7 @@ class WorkerStarter:
         for _ in as_completed(futures):
             pass
     def positions(self):
-        W=PositionWorker()
+        W=FilingsWorker()
         W.run()
     def stockinfo(self):
         W=StockInfoWorker()

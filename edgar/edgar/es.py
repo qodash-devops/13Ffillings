@@ -86,6 +86,28 @@ class ESDB:
             return res
         except:
             return None
+    def get_filings_position(self,cusip):
+        raise NotImplemented #TODO implement
+
+
+    def get_info(self,cusip):
+        q = {"query": {
+            "bool": {
+                "should": [
+                    {"match_phrase": {
+                        "cusip": cusip
+                    }}
+                ]
+            }
+        }
+        }
+        try:
+            resp = self.es.search(index="13f_stockinfo", body=q, size=10)
+            res = resp['hits']['hits'][0]['_source']
+            return res
+        except:
+            return None
+
     def remove_url(self,url,index="13f_index"):
         q = {"query": {
                 "bool": {
