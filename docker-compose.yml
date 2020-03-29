@@ -10,6 +10,17 @@ services:
     restart: always
     links:
       - elasticsearch
+  stockinfo:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    entrypoint: "python /crawler/edgar/crawler-go.py "
+    command: "stockinfo"
+    env_file:
+      - .env
+    restart: always
+    links:
+      - elasticsearch
   elasticsearch:
     image: elasticsearch:7.6.1
     container_name: 13fes

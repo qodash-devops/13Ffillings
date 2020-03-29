@@ -64,7 +64,7 @@ class ESDB:
                 }
             }
         }
-        resp = helpers.scan(self.es, index='stockinfo', query=q, size=100)
+        resp = helpers.scan(self.es, index='13f_stockinfo', query=q, size=100)
         cusips=set([r['_source']['cusip'] for r in resp])
         cusips = list(cusips)
         return cusips

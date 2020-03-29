@@ -6,7 +6,7 @@ es=ESDB()
 
 class QuantumonlineSpider(scrapy.Spider):
     name = 'stockinfo'
-    es_index= name
+    es_index= '13f_stockinfo'
     allowed_domains = ['quantumonline.com']
     custom_settings = {
         'ELASTICSEARCH_INDEX': es_index,
@@ -28,6 +28,7 @@ class QuantumonlineSpider(scrapy.Spider):
         return missing
 
     def start_requests(self):
+        es.create_index(self.es_index)
         missing_cusips=self._get_missing_cusips()
         n_missing=len(missing_cusips)
         for c in missing_cusips:

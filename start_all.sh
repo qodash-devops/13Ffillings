@@ -10,11 +10,11 @@ print_title "Deploying elasticstack..."
 docker-compose up -d elasticsearch kibana
 
 print_title "building crawler..."
-docker-compose build crawler
+docker-compose build
 
 print_title "Running page indexer ..."
 docker-compose run  --name edgar_page_indexer crawler indexer
 
 print_title "Starting in crawlers background  ..."
 docker-compose run -d --name edgar_filings_crawler crawler filings
-docker-compose run -d --name stock_info_crawler crawler stockinfo
+docker-compose up -d stockinfo
