@@ -1,6 +1,6 @@
 import scrapy
 import re
-from ..items import F13FilingItem
+from ..items import PositionItem
 from datetime import datetime
 import sys
 from ..es import ESDB
@@ -14,10 +14,11 @@ def find_element(txt,tag='reportCalendarOrQuarter'):
     return res
 
 class FilingSpider(scrapy.Spider):
-    name = "filings"
-    es_index='13f_filings'
+    name = "positions"
+    es_index='13f_positions'
     pipeline = []
     custom_settings = {
+        'ELASTICSEARCH_UNIQ_KEY':['filingurl','cusip'],
         'ELASTICSEARCH_INDEX': es_index,
         'ELASTICSEARCH_TYPE': 'filing',
         'ELASTICSEARCH_BUFFER_LENGTH':10,
@@ -42,19 +43,16 @@ class FilingSpider(scrapy.Spider):
             txt = txt.replace('<eis:','<').replace('</eis:','</')
             report_type = find_element(txt, 'reportType')[0]
             assert '13F' in report_type
-            filing = F13FilingItem()
-            filing['quarter_date'] = find_element(txt, 'reportCalendarOrQuarter')[0]
+            quarter_date = find_element(txt, 'reportCalendarOrQuarter')[0]
             try:
-                dt = datetime.strptime(filing['quarter_date'], '%m-%d-%Y')
-                filing['quarter_date']=dt
-                filing['filingyear'] = dt.year
+                quarter_date = datetime.strptime(quarter_date, '%m-%d-%Y')
             except:
-                self.logger.error(f"Parsing date:{filing['quarter_date']}")
-            filing['filer_cik'] = find_element(txt, 'cik')[0]
+                self.logger.error(f"Parsing date:{quarter_date}")
+
+            filer_cik = find_element(txt, 'cik')[0]
             filer_name = find_element(txt, 'filingManager')[0]
-            filing['filer_name'] = find_element(filer_name, 'name')[0]
-            filing['filingurl'] = response.url
-            filing['filing_type'] = '13F'
+            filer_name = find_element(filer_name, 'name')[0]
+            url= response.url
             res_positions = []
             positions = find_element(txt, 'infoTable')
             if report_type=='13F NOTICE' and len(positions)==0:
@@ -66,13 +64,11 @@ class FilingSpider(scrapy.Spider):
                 self.crawler.stats.inc_value('Number_of_filigs_without_position')
             if len(positions)>10000:
                 self.logger.warning(f"Filing with {len(positions)} positions URL={response.url}")
-            cusips=[]
+
             for p in positions:
                 titleclass = find_element(p, 'titleOfClass')[0]
-
                 stock_name = find_element(p,  'nameOfIssuer')[0]
                 stock_cusip = find_element(p,  'cusip')[0]
-                cusips.append(stock_cusip)
                 shares = find_element(p,  'shrsOrPrnAmt')[0]
                 n_shares = find_element(shares,  'sshPrnamt')[0]
                 try:
@@ -80,16 +76,20 @@ class FilingSpider(scrapy.Spider):
                 except:
                     pass
                 put_call = find_element(p, 'putCall')
-                res_positions.append({'name': stock_name, 'cusip': stock_cusip, 'symbol': '',
-                                      'quantity': n_shares, 'callput': put_call,'class':titleclass})
 
-            filing['positions'] = res_positions
+                pos_item=PositionItem()
+                pos_item['filingurl']=response.url
+                pos_item['filer_name']=filer_name
+                pos_item['filer_cik']=filer_cik
+                pos_item['quarter_date']=quarter_date
+                pos_item['year']=quarter_date.year
+                pos_item['quantity']=n_shares
+                pos_item['cusip']=stock_cusip
+                pos_item['stockname']=stock_name
+                pos_item['instrumentclass']=titleclass
+                pos_item['put_call']=put_call
 
-            if len(res_positions)==0:
-                self.logger.info(f'Filing processing ReportType="{report_type}" Npositions={len(res_positions)}  URL={response.url}')
-            if len(positions) > 0:
-                self.crawler.stats.inc_value("Number_positions",len(positions))
-                yield filing
+                yield  pos_item
 
         except:
             self.logger.error(f'Processing url: {response.url}')

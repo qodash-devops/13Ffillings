@@ -1,5 +1,5 @@
 """Elastic Search Pipeline for scrappy expanded with support for multiple items"""
-
+from .es import ESDB
 from datetime import datetime
 from elasticsearch import Elasticsearch, helpers
 from six import string_types
@@ -7,6 +7,7 @@ import hashlib
 import types
 import data.yfinance as yf
 
+es=ESDB()
 
 class InvalidSettingsException(Exception):
     pass
@@ -170,3 +171,14 @@ class InfoPipeline(object):
         except:
             self.logger.error('getting spots for ticker:'+ticker)
             return {},{}
+
+class PositionsInfoPipeline(InfoPipeline):
+    #TODO dedbug
+    def process_item(self, item, spider):
+        assert spider.name=='stockinfo'
+        positions=es.get_positions(item['cusip'])
+        for pos in positions:
+            id=pos["_id"]
+            es.es.update('13f_positions',id,
+                            {'ticker':item['ticker'],'close':item['close'],'info':item['info']})
+        return item

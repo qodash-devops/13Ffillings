@@ -36,19 +36,18 @@ class ESDB:
     def get_filings_cusips(self):
         cusips=[]
         q={
-              "_source": "positions.cusip",
+              "_source": "cusip",
               "aggs": {
                 "cusips": {
                   "terms": {
-                    "field": "positions.cusip.keyword",
+                    "field": "cusip.keyword",
                     "size": 10
                   }
                 }
               }
             }
-        resp=helpers.scan(self.es,index='13f_filings',query=q,size=100)
-        for res in resp:
-            cusips+=[c['cusip'] for c in res['_source']['positions']]
+        resp=helpers.scan(self.es,index='13f_positions',query=q,size=100)
+        cusips=[r['_source']['cusip'] for r in resp]
         cusips=list(set(cusips))
         return cusips
     def get_info_cusips(self):
@@ -86,8 +85,6 @@ class ESDB:
             return res
         except:
             return None
-    def get_filings_position(self,cusip):
-        raise NotImplemented #TODO implement
 
 
     def get_info(self,cusip):
@@ -107,6 +104,22 @@ class ESDB:
             return res
         except:
             return None
+
+    def get_positions(self,cusip):
+        # TODO debug
+        q={
+                "query": {
+                    "match" : {
+                        "cusip" : {
+                            "query" : cusip
+                        }
+                    }
+                }
+            }
+
+        resp = helpers.scan(self.es, index='13f_positions', query=q, size=1000)
+        positions = list(resp)
+        return positions
 
     def remove_url(self,url,index="13f_index"):
         q = {"query": {
@@ -131,7 +144,7 @@ class ESDB:
 
 if __name__ == '__main__':
     DB=ESDB()
-    DB.get_positions_cusips()
+    DB.get_positions("464286871")
     # res=(DB.get_filing_urls())
     # res=DB.get_url(res[0])
     # DB.remove_url(res['url'])

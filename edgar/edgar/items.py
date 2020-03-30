@@ -7,36 +7,31 @@
 
 import scrapy
 
-class F13FilingItem(scrapy.Item):
-    # define the fields for your item here like:
-
-    filing_type=scrapy.Field()
-    filer_name=scrapy.Field()
-    filer_cik = scrapy.Field()
-    positions =scrapy.Field()
-    quarter_date=scrapy.Field()
-    quarter=scrapy.Field()
-    filingyear=scrapy.Field()
-    symbol=scrapy.Field()
-    filingurl=scrapy.Field()
 
 class PositionItem(scrapy.Item):
-    quarter_date=scrapy.Field()
-    quarter=scrapy.Field()
-    year=scrapy.Field()
+    filingurl = scrapy.Field()
     filer_name=scrapy.Field()
-    filer_cik=scrapy.Field()
+    filer_cik = scrapy.Field()
+
+    quarter_date=scrapy.Field()
+    year=scrapy.Field()
+
     quantity=scrapy.Field()
-    ticker=scrapy.Field()
     cusip=scrapy.Field()
-    info=scrapy.Field()
+    stockname=scrapy.Field()
     instrumentclass=scrapy.Field()
+    put_call=scrapy.Field()
+    info=scrapy.Field()
     spot=scrapy.Field()
     spot_date=scrapy.Field()
     next_quarter_spot=scrapy.Field()
     next_quarter_spot_date=scrapy.Field()
     past_quarter_spot=scrapy.Field()
     past_quarter_spot_date=scrapy.Field()
+
+    ticker=scrapy.Field()
+    close=scrapy.Field()
+    info=scrapy.Field()
 
 class StockInfoItem(scrapy.Item):
     # define the fields for your item here like:
