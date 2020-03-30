@@ -33,6 +33,8 @@ class PositionItem(scrapy.Item):
     close=scrapy.Field()
     info=scrapy.Field()
 
+    status=scrapy.Field()
+
 class StockInfoItem(scrapy.Item):
     # define the fields for your item here like:
     # name = scrapy.Field()

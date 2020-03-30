@@ -35,11 +35,13 @@ class QuantumonlineSpider(scrapy.Spider):
         missing_cusips=self._get_missing_cusips()
         n_missing=len(missing_cusips)
         for c in missing_cusips:
-            h={"Content-Type":"application/x-www-form-urlencoded"}
-            request=scrapy.FormRequest(url='https://www.quantumonline.com/search.cfm',formdata={"sopt":"cusip","tickersymbol":c},headers=h,callback=self.parse_cusip)
-            request.cb_kwargs["cusip"]=c
-            yield request
-
+            if es.get_info(c) is None:
+                h={"Content-Type":"application/x-www-form-urlencoded"}
+                request=scrapy.FormRequest(url='https://www.quantumonline.com/search.cfm',formdata={"sopt":"cusip","tickersymbol":c},headers=h,callback=self.parse_cusip)
+                request.cb_kwargs["cusip"]=c
+                yield request
+            else:
+                self.logger.info('Skipping existing cusip:'+c)
 
     def parse_cusip(self, response,cusip):
         try:

@@ -157,6 +157,8 @@ class InfoPipeline(object):
             close,info=self.get_spots(item['ticker'])
             item['close']=close
             item['info']=info
+            spider.crawler.stats.inc_value('info_ticker_found')
+        spider.crawler.stats.inc_value('ninfo')
         return item
 
     def get_spots(self,ticker):
@@ -173,12 +175,29 @@ class InfoPipeline(object):
             return {},{}
 
 class PositionsInfoPipeline(InfoPipeline):
-    #TODO dedbug
     def process_item(self, item, spider):
         assert spider.name=='stockinfo'
-        positions=es.get_positions(item['cusip'])
-        for pos in positions:
-            id=pos["_id"]
-            es.es.update('13f_positions',id,
-                            {'ticker':item['ticker'],'close':item['close'],'info':item['info']})
+        if item['status']!='NOTFOUND':
+            positions=es.get_positions(item['cusip'])
+            for pos in positions:
+                id=pos["_id"]
+                params={'ticker':item['ticker'],'close':item['close'],'info':item['info']}
+                params["status"]="identified"
+                # script="ctx._source.ticker=params.ticker;ctx._source.close=params.close;ctx._source.info=params.info;"
+                script="""
+                    ctx._source.ticker=params.ticker;
+                    ctx._source.close=params.close;
+                    ctx._source.info=params.info;
+                    ctx._source.status=params.status;
+                """
+                body={
+                        "script" : {
+                            "source": script,
+                            "lang": "painless",
+                            "params" : params
+                        }
+                    }
+                es.es.update('13f_positions',id,body=body)
+                spider.crawler.stats.inc_value('identified_positions')
+        spider.crawler.stats.inc_value('positions')
         return item

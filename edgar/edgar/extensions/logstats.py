@@ -1,12 +1,14 @@
 import logging
-
+from pprint import pformat
 from twisted.internet import task
-
+from datetime import datetime
 from scrapy.exceptions import NotConfigured
 from scrapy import signals
 
 logger = logging.getLogger(__name__)
+from ..es import ESDB
 
+es=ESDB()
 
 class LogStats:
     """Log basic scraping stats periodically"""
@@ -37,7 +39,6 @@ class LogStats:
         self.task.start(self.interval)
 
     def log(self, spider):
-
         if spider.name=='edgarfilings':
             nopos=self.stats.get_value('Number_of_filigs_without_position',0)
             removed_idx=self.stats.get_value('Removed_page_indices',0)
@@ -78,3 +79,25 @@ class LogStats:
     def spider_closed(self, spider, reason):
         if self.task and self.task.running:
             self.task.stop()
+
+
+class ESLogStats(LogStats):
+    last_values={}
+    def log(self, spider):
+        index="crawler_stats_"+spider.name
+        stats=self.stats.get_stats(spider.name)
+        stats['record_time']=datetime.now()
+        res=es.es.index(index,stats,doc_type='logstats')
+        logger.info("stats doc :"+index+" _id:"+res['_id']+"\n"+pformat(stats))
+        for k in stats.keys():
+            self.stats.set_value(k, 0)
+        pass
+
+
+
+
+
+    def spider_closed(self, spider, reason):
+        if self.task and self.task.running:
+            self.task.stop()
+

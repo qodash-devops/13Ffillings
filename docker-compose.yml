@@ -10,6 +10,7 @@ services:
     restart: always
     links:
       - elasticsearch
+    command: "positions"
   stockinfo:
     build:
       context: .
@@ -26,12 +27,15 @@ services:
     container_name: 13fes
     environment:
       - discovery.type=single-node
+      - 'path.repo=/usr/share/elasticsearch/backup'
     ports:
       - "9200:9200"
       - "9300:9300"
     volumes:
-      - "esdata1:/usr/share/elasticsearch"
+      - elastic-data:/usr/share/elasticsearch/data
+      - elastic-backup:/usr/share/elasticsearch/backup
   kibana:
+    container_name: 13fkibana
     image: kibana:7.6.1
     shm_size: 5g
     ports:
@@ -40,8 +44,11 @@ services:
         - elasticsearch
 
 volumes:
-  esdata1:
+  elastic-data:
     driver: local
+  elastic-backup:
+    driver: local
+
 
 
 

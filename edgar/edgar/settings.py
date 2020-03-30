@@ -21,7 +21,10 @@ LOG_FORMAT = '%(levelname)s: %(message)s'
 
 YEARS=os.environ.get('CRAWL_YEARS','2018,2019,2020').split(',')
 
-
+EXTENSIONS = {
+    'edgar.extensions.logstats.ESLogStats': 200,
+     'scrapy.extensions.telnet.TelnetConsole': None,
+}
 
 
 

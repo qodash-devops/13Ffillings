@@ -20,7 +20,7 @@ class FilingSpider(scrapy.Spider):
     custom_settings = {
         'ELASTICSEARCH_UNIQ_KEY':['filingurl','cusip'],
         'ELASTICSEARCH_INDEX': es_index,
-        'ELASTICSEARCH_TYPE': 'filing',
+        'ELASTICSEARCH_TYPE': 'position',
         'ELASTICSEARCH_BUFFER_LENGTH':10,
         'ELASTICSEARCH_UNIQ_KEY': 'filingurl'}
     stock_info={}
@@ -88,7 +88,8 @@ class FilingSpider(scrapy.Spider):
                 pos_item['stockname']=stock_name
                 pos_item['instrumentclass']=titleclass
                 pos_item['put_call']=put_call
-
+                pos_item['status']='scraped'
+                self.crawler.stats.inc_value('positions')
                 yield  pos_item
 
         except:
