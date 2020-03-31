@@ -12,16 +12,16 @@ curl -i -XPOST http:/localhost:9200/_snapshot/kibana_backup?verify=false -H "Con
 #copying snapshot to container
 rm -rf /tmp/kibana_backup
 tar -xzvf kibana_backup.tar.gz -C /
-docker  /tmp/kibana_backup cp 13fes:/usr/share/elasticsearch/backup
-
+docker cp /tmp/kibana_backup  13fes:/usr/share/elasticsearch/backup
+docker exec sh -c 'mv /usr/share/elasticsearch/backup/kibana_backup/* /usr/share/elasticsearch/backup'
 
 
 #Restoring snapshot
 curl -i -XDELETE http:/localhost:9200/.kibana_*
-curl -i -XPOST http:/localhost:9200//_snapshot/kibana_backup/kibana_snapshot/_restore
+curl -i -XPOST http:/localhost:9200/_snapshot/kibana_backup/kibana_snapshot/_restore
 
 echo "starting kibana"
-docker start 13fkib
+docker start 13fkibana
 
 
 

@@ -164,7 +164,7 @@ class InfoPipeline(object):
     def get_spots(self,ticker):
         try:
             t = yf.Ticker(ticker)
-            info=t.info
+            info=self.clean_info(t.info)
             res = t.history(period="3y")
             res = res["Close"]
             res.index = res.index.to_pydatetime()
@@ -173,31 +173,47 @@ class InfoPipeline(object):
         except:
             self.logger.error('getting spots for ticker:'+ticker)
             return {},{}
+    def clean_info(self,info):
+        number_fields=["52WeekChange","SandP52WeekChange","ask","askSize",
+                       "averageDailyVolume10Day","averageVolume","averageVolume10days",
+                        "beta","beta3Year","bid","bidSize","bookValue","dateShortInterest",
+                       "dividendRate","dividendYield","earningsQuarterlyGrowth","enterpriseToEbitda",
+                       "enterpriseToRevenue","enterpriseValue","fiftyDayAverage","fiftyTwoWeekHigh",
+                       "fiftyTwoWeekLow","forwardPE","marketCap","trailingEps","trailingPE"]
+        for k in number_fields:
+            try:
+                info[k]=float(info[k])
+            except:
+                del info[k]
 
 class PositionsInfoPipeline(InfoPipeline):
     def process_item(self, item, spider):
         assert spider.name=='stockinfo'
-        if item['status']!='NOTFOUND':
-            positions=es.get_positions(item['cusip'])
-            for pos in positions:
-                id=pos["_id"]
-                params={'ticker':item['ticker'],'close':item['close'],'info':item['info']}
-                params["status"]="identified"
-                # script="ctx._source.ticker=params.ticker;ctx._source.close=params.close;ctx._source.info=params.info;"
-                script="""
-                    ctx._source.ticker=params.ticker;
-                    ctx._source.close=params.close;
-                    ctx._source.info=params.info;
-                    ctx._source.status=params.status;
-                """
-                body={
-                        "script" : {
-                            "source": script,
-                            "lang": "painless",
-                            "params" : params
+        try:
+            if item['status']!='NOTFOUND':
+                positions=es.get_positions(item['cusip'])
+                for pos in positions:
+                    id=pos["_id"]
+                    params={'ticker':item['ticker'],'close':item['close'],'info':item['info']}
+                    params["status"]="identified"
+                    # script="ctx._source.ticker=params.ticker;ctx._source.close=params.close;ctx._source.info=params.info;"
+                    script="""
+                        ctx._source.ticker=params.ticker;
+                        ctx._source.close=params.close;
+                        ctx._source.info=params.info;
+                        ctx._source.status=params.status;
+                    """
+                    body={
+                            "script" : {
+                                "source": script,
+                                "lang": "painless",
+                                "params" : params
+                            }
                         }
-                    }
-                es.es.update('13f_positions',id,body=body)
-                spider.crawler.stats.inc_value('identified_positions')
-        spider.crawler.stats.inc_value('positions')
+                    es.es.update('13f_positions',id,body=body)
+                    spider.crawler.stats.inc_value('identified_positions')
+            spider.crawler.stats.inc_value('positions')
+        except:
+            self.logger.error("processing stock info item cusip:"+item['cusip'])
+
         return item

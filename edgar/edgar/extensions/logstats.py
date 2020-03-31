@@ -83,6 +83,7 @@ class LogStats:
 
 class ESLogStats(LogStats):
     last_values={}
+
     def log(self, spider):
         index="crawler_stats_"+spider.name
         stats=self.stats.get_stats(spider.name)

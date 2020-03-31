@@ -15,7 +15,7 @@ ITEM_PIPELINES = {
     'edgar.pipelines.ElasticSearchPipeline': 200
 }
 
-LOGSTATS_INTERVAL=30
+LOGSTATS_INTERVAL=60
 LOG_LEVEL = 'INFO'
 LOG_FORMAT = '%(levelname)s: %(message)s'
 

@@ -34,6 +34,7 @@ class QuantumonlineSpider(scrapy.Spider):
         es.create_index(self.es_index)
         missing_cusips=self._get_missing_cusips()
         n_missing=len(missing_cusips)
+        self.logger.info(f'{n_missing} cusips to find ...')
         for c in missing_cusips:
             if es.get_info(c) is None:
                 h={"Content-Type":"application/x-www-form-urlencoded"}
