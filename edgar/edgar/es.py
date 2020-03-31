@@ -144,7 +144,7 @@ class ESDB:
 
 if __name__ == '__main__':
     DB=ESDB()
-    DB.get_positions("464286871")
+    res=DB.get_info("464286871")
     # res=(DB.get_filing_urls())
     # res=DB.get_url(res[0])
     # DB.remove_url(res['url'])

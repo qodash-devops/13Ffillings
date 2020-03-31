@@ -1,6 +1,6 @@
 import scrapy
 import re
-from ..items import PositionItem
+from ..items import PositionItem,ItemList
 from datetime import datetime
 import sys
 from ..es import ESDB
@@ -21,8 +21,8 @@ class FilingSpider(scrapy.Spider):
         'ELASTICSEARCH_UNIQ_KEY':['filingurl','cusip'],
         'ELASTICSEARCH_INDEX': es_index,
         'ELASTICSEARCH_TYPE': 'position',
-        'ELASTICSEARCH_BUFFER_LENGTH':10,
-        'ELASTICSEARCH_UNIQ_KEY': 'filingurl'}
+        'ELASTICSEARCH_BUFFER_LENGTH': 500,
+        'ELASTICSEARCH_UNIQ_KEY': ['cusip','filingurl']}
     stock_info={}
 
     def start_requests(self):
@@ -65,6 +65,7 @@ class FilingSpider(scrapy.Spider):
             if len(positions)>10000:
                 self.logger.warning(f"Filing with {len(positions)} positions URL={response.url}")
 
+            positions_res=[]
             for p in positions:
                 titleclass = find_element(p, 'titleOfClass')[0]
                 stock_name = find_element(p,  'nameOfIssuer')[0]
@@ -82,7 +83,6 @@ class FilingSpider(scrapy.Spider):
                 pos_item['filer_name']=filer_name
                 pos_item['filer_cik']=filer_cik
                 pos_item['quarter_date']=quarter_date
-                pos_item['year']=quarter_date.year
                 pos_item['quantity']=n_shares
                 pos_item['cusip']=stock_cusip
                 pos_item['stockname']=stock_name
@@ -90,8 +90,10 @@ class FilingSpider(scrapy.Spider):
                 pos_item['put_call']=put_call
                 pos_item['status']='scraped'
                 self.crawler.stats.inc_value('positions')
-                yield  pos_item
-
+                positions_res.append(pos_item)
+            f=ItemList()
+            f['list']=positions_res
+            yield f
         except:
             self.logger.error(f'Processing url: {response.url}')
             self.logger.error(f"Reason {sys.exc_info()}")

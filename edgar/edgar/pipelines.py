@@ -6,6 +6,7 @@ from six import string_types
 import hashlib
 import types
 import data.yfinance as yf
+from .items import ItemList
 
 es=ESDB()
 
@@ -85,10 +86,12 @@ class ElasticSearchPipeline(object):
         return unique_key
 
     def get_id(self, item):
-        item_unique_key = item[self.settings['ELASTICSEARCH_UNIQ_KEY']]
-        if isinstance(item_unique_key, list):
-            item_unique_key = '-'.join(item_unique_key)
+        key_def=self.settings['ELASTICSEARCH_UNIQ_KEY']
 
+        if isinstance(key_def, list):
+            item_unique_key = '-'.join([item[k] for k in key_def])
+        else:
+            item_unique_key= item[key_def]
         unique_key = self.process_unique_key(item_unique_key)
         item_id = hashlib.sha1(unique_key).hexdigest()
         return item_id
@@ -126,6 +129,7 @@ class ElasticSearchPipeline(object):
             self.send_items()
             self.items_buffer = []
 
+
     def send_items(self):
         helpers.bulk(self.es, self.items_buffer)
 
@@ -133,6 +137,10 @@ class ElasticSearchPipeline(object):
         if isinstance(item, types.GeneratorType) or isinstance(item, list):
             for each in item:
                 self.process_item(each, spider)
+        elif isinstance(item, ItemList):
+            for each in item['list']:
+                self.process_item(each, spider)
+
         else:
             self.index_item(item)
             self.logger.debug('Item sent to Elastic Search %s' % self.settings['ELASTICSEARCH_INDEX'])

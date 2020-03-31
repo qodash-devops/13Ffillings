@@ -7,15 +7,14 @@
 
 import scrapy
 
+class ItemList(scrapy.Item):
+    list=scrapy.Field()
 
 class PositionItem(scrapy.Item):
     filingurl = scrapy.Field()
     filer_name=scrapy.Field()
     filer_cik = scrapy.Field()
-
     quarter_date=scrapy.Field()
-    year=scrapy.Field()
-
     quantity=scrapy.Field()
     cusip=scrapy.Field()
     stockname=scrapy.Field()
