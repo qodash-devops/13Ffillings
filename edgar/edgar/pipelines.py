@@ -171,7 +171,7 @@ class InfoPipeline(object):
             close = res.dropna().to_frame().reset_index().to_dict(orient='records')
             return close,info
         except:
-            self.logger.error('getting spots for ticker:'+ticker)
+            self.logger.warning('getting spots for ticker:'+ticker)
             return {},{}
     def clean_info(self,info):
         number_fields=["52WeekChange","SandP52WeekChange","ask","askSize",
@@ -212,7 +212,6 @@ class PositionsInfoPipeline(InfoPipeline):
                         }
                     es.es.update('13f_positions',id,body=body)
                     spider.crawler.stats.inc_value('identified_positions')
-            spider.crawler.stats.inc_value('positions')
         except:
             self.logger.error("processing stock info item cusip:"+item['cusip'])
 
