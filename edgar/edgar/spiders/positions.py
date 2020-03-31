@@ -22,7 +22,13 @@ class FilingSpider(scrapy.Spider):
         'ELASTICSEARCH_INDEX': es_index,
         'ELASTICSEARCH_TYPE': 'position',
         'ELASTICSEARCH_BUFFER_LENGTH': 500,
-        'ELASTICSEARCH_UNIQ_KEY': ['cusip','filingurl']}
+        'ELASTICSEARCH_UNIQ_KEY': ['cusip','filingurl'],
+        'ITEM_PIPELINES': {
+            'edgar.pipelines.ElasticSearchPipeline': 300,
+            'edgar.pipelines.PositionsInfoPipeline': 200
+        }
+
+    }
     stock_info={}
 
     def start_requests(self):
