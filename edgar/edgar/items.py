@@ -15,6 +15,7 @@ class PositionItem(scrapy.Item):
     filer_name=scrapy.Field()
     filer_cik = scrapy.Field()
     quarter_date=scrapy.Field()
+    publishdate=scrapy.Field()
     quantity=scrapy.Field()
     cusip=scrapy.Field()
     stockname=scrapy.Field()
@@ -39,7 +40,6 @@ class StockInfoItem(scrapy.Item):
     # name = scrapy.Field()
     cusip=scrapy.Field()
     ticker=scrapy.Field()
-    exchange=scrapy.Field()
     status=scrapy.Field()
     close=scrapy.Field()
     info=scrapy.Field()
@@ -50,6 +50,7 @@ class PageIndexItem(scrapy.Item):
     quarter=scrapy.Field()
     publishdate=scrapy.Field()
     year=scrapy.Field()
-    url=scrapy.Field()
+    filingurl=scrapy.Field()
     doc_type=scrapy.Field()
+
 

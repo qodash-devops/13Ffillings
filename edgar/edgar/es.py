@@ -1,22 +1,35 @@
 import os
 from elasticsearch import Elasticsearch,helpers
 import logging
-uri=os.environ.get('ES_SERVER','http://localhost:9200')
+uri=os.environ.get('ES_SERVER','http://localhost:9201')
 
 logger = logging.getLogger("elasticsearch")
 logger.setLevel(logging.WARNING)
-
+MAX_AGG_SIZE=3000000
 class ESDB:
+    settings = {}  # default settings for index mappings
+
     def __init__(self):
-        self.es=Elasticsearch(hosts=[uri])
+        self.es=Elasticsearch(hosts=[uri],retry_on_timeout=True)
+        self.update_cluster_settings()
+    def create_index(self,index,existok=True,settings=None):
 
-
-    def create_index(self,index,existok=True):
+        if settings is None:
+            settings=self.settings
         if existok:
             if not self.es.indices.exists(index):
-                self.es.indices.create(index)
+                self.es.indices.create(index,body=settings)
+                self.es.indices.refresh(index)
+            else:
+                if settings!={}:
+                    logger.warning(f'Updating setting for index:{index} :  {settings}')
+                    self.es.indices.close(index=index)
+                    self.es.indices.put_settings(settings, index=index)
+                    self.es.indices.open(index)
+                    self.es.indices.refresh()
         else:
-            self.es.indices.create(index)
+            self.es.indices.create(index,body=settings)
+
 
 
     def get_index_urls(self):
@@ -28,44 +41,38 @@ class ESDB:
 
     def get_filing_urls(self):
         urls=[]
-        resp=helpers.scan(self.es,index="13f_index",query={"_source":"url"},size=1000)
+        resp=helpers.scan(self.es,index="13f_index",query={"_source":"filingurl"},size=1000)
         for r in resp:
-            urls.append(r["_source"]["url"])
+            urls.append(r["_source"]["filingurl"])
         return urls
 
     def get_filings_cusips(self):
-        cusips=[]
         q={
-              "_source": "cusip",
-              "aggs": {
-                "cusips": {
-                  "terms": {
-                    "field": "cusip.keyword",
-                    "size": 10
-                  }
-                }
+              "size":0,
+              "aggs" : {
+                "cusip" : {"terms" : { "field" : "cusip.keyword","size" : MAX_AGG_SIZE }}
               }
             }
-        resp=helpers.scan(self.es,index='13f_positions',query=q,size=100)
-        cusips=[r['_source']['cusip'] for r in resp]
+        resp=self.es.search(body=q,index='13f_positions')
+        cusips=[r['key'] for r in resp['aggregations']['cusip']['buckets']]
         cusips=list(set(cusips))
         return cusips
-    def get_info_cusips(self):
+    def get_info_cusips(self,index='13f_stockinfo'):
         cusips = []
         q = {
-            "_source": "cusip",
+            "size": "0",
             "aggs": {
-                "cusips": {
+                "cusip": {
                     "terms": {
                         "field": "cusip.keyword",
-                        "size": 10
+                        "size": MAX_AGG_SIZE
                     }
                 }
             }
         }
-        resp = helpers.scan(self.es, index='13f_stockinfo', query=q, size=100)
-        cusips=set([r['_source']['cusip'] for r in resp])
-        cusips = list(cusips)
+        resp = self.es.search(body=q,index=index)
+        cusips=[r['key'] for r in resp['aggregations']['cusip']['buckets']]
+        cusips = list(set(cusips))
         return cusips
 
     def get_url(self,url,index='13f_index',field_name='filingurl'):
@@ -126,7 +133,7 @@ class ESDB:
                 "bool": {
                     "should": [
                         {"match_phrase": {
-                            "url": url
+                            "filingurl": url
                         }}
                     ]
                 }
@@ -140,7 +147,12 @@ class ESDB:
 
 
         pass
-
+    def update_cluster_settings(self):
+        self.es.cluster.put_settings({
+                "persistent" : {
+                    "search.max_buckets" : MAX_AGG_SIZE+1000,
+                }
+        })
 
 if __name__ == '__main__':
     DB=ESDB()

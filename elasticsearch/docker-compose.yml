@@ -9,7 +9,7 @@ services:
       - discovery.seed_hosts=es02,es03
       - cluster.initial_master_nodes=es01,es02,es03
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
     ulimits:
       memlock:
         soft: -1
@@ -17,9 +17,8 @@ services:
     volumes:
       - data01:/usr/share/elasticsearch/data
     ports:
-      - 9265:9200
-    networks:
-      - elastic
+      - 9201:9200
+
   es02:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.6.1
     container_name: es02
@@ -29,15 +28,14 @@ services:
       - discovery.seed_hosts=es01,es03
       - cluster.initial_master_nodes=es01,es02,es03
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
       - data02:/usr/share/elasticsearch/data
-    networks:
-      - elastic
+
   es03:
     image: docker.elastic.co/elasticsearch/elasticsearch:7.6.1
     container_name: es03
@@ -47,24 +45,26 @@ services:
       - discovery.seed_hosts=es01,es02
       - cluster.initial_master_nodes=es01,es02,es03
       - bootstrap.memory_lock=true
-      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+      - "ES_JAVA_OPTS=-Xms2g -Xmx2g"
     ulimits:
       memlock:
         soft: -1
         hard: -1
     volumes:
       - data03:/usr/share/elasticsearch/data
-    networks:
-      - elastic
+
 
   kibana:
-    container_name: 13fkibana
+    container_name: 13fkibana_cluster
     image: kibana:7.6.1
     shm_size: 5g
+    environment:
+      - SERVER_NAME=kibana.edgar
+      - ELASTICSEARCH_HOSTS=http://es01:9200
     ports:
-      - "5601:5601"
+      - "5602:5601"
     depends_on:
-        - es01
+      - es01
 
 
 volumes:
@@ -75,7 +75,8 @@ volumes:
   data03:
     driver: local
 
+
 networks:
-  elastic:
-    name: elasticnet
+  default:
     driver: bridge
+    name: elastic_clusternet

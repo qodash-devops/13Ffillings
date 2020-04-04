@@ -20,7 +20,11 @@ class EdgarIndexSpider(scrapy.Spider):
     custom_settings = {
         'ELASTICSEARCH_INDEX' : es_index,
         'ELASTICSEARCH_TYPE' : 'page_index',
-        'ELASTICSEARCH_UNIQ_KEY' : 'url'}
+        'ELASTICSEARCH_UNIQ_KEY' : 'filingurl',
+        'ITEM_PIPELINES': {
+            'edgar.pipelines.ElasticSearchPipeline': 300
+        }
+    }
 
     def start_requests(self):
         es.create_index(self.es_index,existok=True)
@@ -66,7 +70,7 @@ class EdgarIndexSpider(scrapy.Spider):
                 item['quarter'] = q
                 item['publishdate'] = d
                 item['year'] = y
-                item['url'] = url
+                item['filingurl'] = url
                 item['doc_type'] = lines[i].split('  ')[0]
                 yield item
 

@@ -13,3 +13,4 @@ multitasking
 requests_ntlm
 elasticsearch
 scrapy_redis
+scrapy-proxies

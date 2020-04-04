@@ -28,6 +28,7 @@ services:
     environment:
       - discovery.type=single-node
       - 'path.repo=/usr/share/elasticsearch/backup'
+      - "ES_JAVA_OPTS=-Xms4g -Xmx4g"
     ports:
       - "9200:9200"
       - "9300:9300"
@@ -49,9 +50,13 @@ volumes:
   elastic-backup:
     driver: local
 
+#networks:
+#  default:
+#    name: 13fnet
 
 
 
 networks:
   default:
-    name: 13fnet
+    name: elastic_clusternet
+    external: true

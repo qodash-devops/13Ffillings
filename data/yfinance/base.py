@@ -246,7 +246,6 @@ class TickerBase():
         return df
 
     # ------------------------
-
     def _get_fundamentals(self, kind=None, proxy=None):
         def cleanup(data):
             if data==[]:
@@ -294,20 +293,20 @@ class TickerBase():
         #         '% Out'].str.replace('%', '').astype(float)/100
 
         # sustainability
-        d = {}
-        if isinstance(data.get('esgScores'), dict):
-            for item in data['esgScores']:
-                if not isinstance(data['esgScores'][item], (dict, list)):
-                    d[item] = data['esgScores'][item]
-
-            s = _pd.DataFrame(index=[0], data=d)[-1:].T
-            s.columns = ['Value']
-            s.index.name = '%.f-%.f' % (
-                s[s.index == 'ratingYear']['Value'].values[0],
-                s[s.index == 'ratingMonth']['Value'].values[0])
-
-            self._sustainability = s[~s.index.isin(
-                ['maxAge', 'ratingYear', 'ratingMonth'])]
+        # d = {}
+        # if isinstance(data.get('esgScores'), dict):
+        #     for item in data['esgScores']:
+        #         if not isinstance(data['esgScores'][item], (dict, list)):
+        #             d[item] = data['esgScores'][item]
+        #
+        #     s = _pd.DataFrame(index=[0], data=d)[-1:].T
+        #     s.columns = ['Value']
+        #     s.index.name = '%.f-%.f' % (
+        #         s[s.index == 'ratingYear']['Value'].values[0],
+        #         s[s.index == 'ratingMonth']['Value'].values[0])
+        #
+        #     self._sustainability = s[~s.index.isin(
+        #         ['maxAge', 'ratingYear', 'ratingMonth'])]
 
         # info (be nice to python 2)
         self._info = {}
@@ -318,70 +317,70 @@ class TickerBase():
                 self._info.update(data[item])
 
         self._info['regularMarketPrice'] = self._info['regularMarketOpen']
-        self._info['logo_url'] = ""
-        try:
-            domain = self._info['website'].split(
-                '://')[1].split('/')[0].replace('www.', '')
-            self._info['logo_url'] = 'https://logo.clearbit.com/%s' % domain
-        except Exception:
-            pass
+        # self._info['logo_url'] = ""
+        # try:
+        #     domain = self._info['website'].split(
+        #         '://')[1].split('/')[0].replace('www.', '')
+        #     self._info['logo_url'] = 'https://logo.clearbit.com/%s' % domain
+        # except Exception:
+        #     pass
 
         # events
-        try:
-            cal = _pd.DataFrame(
-                data['calendarEvents']['earnings'])
-            cal['earningsDate'] = _pd.to_datetime(
-                cal['earningsDate'], unit='s')
-            self._calendar = cal.T
-            self._calendar.index = utils.camel2title(self._calendar.index)
-            self._calendar.columns = ['Value']
-        except Exception:
-            pass
+        # try:
+        #     cal = _pd.DataFrame(
+        #         data['calendarEvents']['earnings'])
+        #     cal['earningsDate'] = _pd.to_datetime(
+        #         cal['earningsDate'], unit='s')
+        #     self._calendar = cal.T
+        #     self._calendar.index = utils.camel2title(self._calendar.index)
+        #     self._calendar.columns = ['Value']
+        # except Exception:
+        #     pass
 
         # analyst recommendations
-        try:
-            rec = _pd.DataFrame(
-                data['upgradeDowngradeHistory']['history'])
-            rec['earningsDate'] = _pd.to_datetime(
-                rec['epochGradeDate'], unit='s')
-            rec.set_index('earningsDate', inplace=True)
-            rec.index.name = 'Date'
-            rec.columns = utils.camel2title(rec.columns)
-            self._recommendations = rec[[
-                'Firm', 'To Grade', 'From Grade', 'Action']].sort_index()
-        except Exception:
-            pass
+        # try:
+        #     rec = _pd.DataFrame(
+        #         data['upgradeDowngradeHistory']['history'])
+        #     rec['earningsDate'] = _pd.to_datetime(
+        #         rec['epochGradeDate'], unit='s')
+        #     rec.set_index('earningsDate', inplace=True)
+        #     rec.index.name = 'Date'
+        #     rec.columns = utils.camel2title(rec.columns)
+        #     self._recommendations = rec[[
+        #         'Firm', 'To Grade', 'From Grade', 'Action']].sort_index()
+        # except Exception:
+        #     pass
 
         # get fundamentals
-        data = utils.get_json(url+'/financials', proxy)
-
-        # generic patterns
-        for key in (
-            (self._cashflow, 'cashflowStatement', 'cashflowStatements'),
-            (self._balancesheet, 'balanceSheet', 'balanceSheetStatements'),
-            (self._financials, 'incomeStatement', 'incomeStatementHistory')
-        ):
-
-            item = key[1] + 'History'
-            if isinstance(data.get(item), dict):
-                key[0]['yearly'] = cleanup(data[item][key[2]])
-
-            item = key[1]+'HistoryQuarterly'
-            if isinstance(data.get(item), dict):
-                key[0]['quarterly'] = cleanup(data[item][key[2]])
+        # data = utils.get_json(url+'/financials', proxy)
+        #
+        # # generic patterns
+        # for key in (
+        #     (self._cashflow, 'cashflowStatement', 'cashflowStatements'),
+        #     (self._balancesheet, 'balanceSheet', 'balanceSheetStatements'),
+        #     (self._financials, 'incomeStatement', 'incomeStatementHistory')
+        # ):
+        #
+        #     item = key[1] + 'History'
+        #     if isinstance(data.get(item), dict):
+        #         key[0]['yearly'] = cleanup(data[item][key[2]])
+        #
+        #     item = key[1]+'HistoryQuarterly'
+        #     if isinstance(data.get(item), dict):
+        #         key[0]['quarterly'] = cleanup(data[item][key[2]])
 
         # earnings
-        if isinstance(data.get('earnings'), dict):
-            earnings = data['earnings']['financialsChart']
-            df = _pd.DataFrame(earnings['yearly']).set_index('date')
-            df.columns = utils.camel2title(df.columns)
-            df.index.name = 'Year'
-            self._earnings['yearly'] = df
-
-            df = _pd.DataFrame(earnings['quarterly']).set_index('date')
-            df.columns = utils.camel2title(df.columns)
-            df.index.name = 'Quarter'
-            self._earnings['quarterly'] = df
+        # if isinstance(data.get('earnings'), dict):
+        #     earnings = data['earnings']['financialsChart']
+        #     df = _pd.DataFrame(earnings['yearly']).set_index('date')
+        #     df.columns = utils.camel2title(df.columns)
+        #     df.index.name = 'Year'
+        #     self._earnings['yearly'] = df
+        #
+        #     df = _pd.DataFrame(earnings['quarterly']).set_index('date')
+        #     df.columns = utils.camel2title(df.columns)
+        #     df.index.name = 'Quarter'
+        #     self._earnings['quarterly'] = df
 
         self._fundamentals = True
 

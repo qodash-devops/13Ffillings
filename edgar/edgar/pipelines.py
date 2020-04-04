@@ -4,11 +4,12 @@ from datetime import datetime
 from elasticsearch import Elasticsearch, helpers
 from six import string_types
 import hashlib
-import types
+import types,os
 import data.yfinance as yf
 from .items import ItemList
-
 es=ESDB()
+
+proxy=os.environ.get('YFINANCE_PROXY')
 
 class InvalidSettingsException(Exception):
     pass
@@ -159,6 +160,7 @@ class InfoPipeline(object):
         ext.settings = crawler.settings
         ext.logger = crawler.spider.logger
         return ext
+
     def process_item(self, item, spider):
         assert spider.name=='stockinfo'
         if item['ticker']!='':
@@ -168,11 +170,11 @@ class InfoPipeline(object):
             spider.crawler.stats.inc_value('info_ticker_found')
         spider.crawler.stats.inc_value('ninfo')
         return item
-
     def get_spots(self,ticker):
         try:
             t = yf.Ticker(ticker)
-            info=self.clean_info(t.info)
+            info=t.get_info(proxy=proxy,as_dict=True)
+            info=self.clean_info(info)
             res = t.history(period="3y")
             res = res["Close"]
             res.index = res.index.to_pydatetime()
@@ -182,18 +184,15 @@ class InfoPipeline(object):
             self.logger.warning('getting spots for ticker:'+ticker)
             return {},{}
     def clean_info(self,info):
-        number_fields=["52WeekChange","SandP52WeekChange","ask","askSize",
-                       "averageDailyVolume10Day","averageVolume","averageVolume10days",
-                        "beta","beta3Year","bid","bidSize","bookValue","dateShortInterest",
-                       "dividendRate","dividendYield","earningsQuarterlyGrowth","enterpriseToEbitda",
-                       "enterpriseToRevenue","enterpriseValue","fiftyDayAverage","fiftyTwoWeekHigh",
-                       "fiftyTwoWeekLow","forwardPE","marketCap","trailingEps","trailingPE"]
-        for k in number_fields:
+        res_info={}
+        for k,v in info.items():
             try:
-                info[k]=float(info[k])
+                if not v is None:
+                    if v!='Infinity':
+                        res_info[k]=info[k]
             except:
-                del info[k]
-
+                pass
+        return res_info
 class PositionsInfoPipeline(InfoPipeline):
     def process_item(self, item, spider):
         if spider.name=='stockinfo':
@@ -243,3 +242,8 @@ class PositionsInfoPipeline(InfoPipeline):
 
 
         return item
+
+
+if __name__ == '__main__':
+    I=InfoPipeline()
+    I.get_spots('MSFT')

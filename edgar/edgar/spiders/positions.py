@@ -4,8 +4,7 @@ from ..items import PositionItem,ItemList
 from datetime import datetime
 import sys
 from ..es import ESDB
-
-
+import random
 es=ESDB()
 
 def find_element(txt,tag='reportCalendarOrQuarter'):
@@ -24,8 +23,7 @@ class FilingSpider(scrapy.Spider):
         'ELASTICSEARCH_BUFFER_LENGTH': 500,
         'ELASTICSEARCH_UNIQ_KEY': ['cusip','filingurl'],
         'ITEM_PIPELINES': {
-            'edgar.pipelines.ElasticSearchPipeline': 300,
-            'edgar.pipelines.PositionsInfoPipeline': 200
+            'edgar.pipelines.ElasticSearchPipeline': 300
         }
 
     }
@@ -34,10 +32,12 @@ class FilingSpider(scrapy.Spider):
     def start_requests(self):
         es.create_index(self.es_index,existok=True)
         urls=es.get_filing_urls()
+        random.shuffle(urls)
         for url in urls:
             url_data=es.get_url(url,index=self.es_index)
             if url_data is None:
-                yield scrapy.Request(url=url, callback=self.parse_filing13F)
+                req=scrapy.Request(url=url, callback=self.parse_filing13F)
+                yield req
     def parse_filing13F(self, response):
         try:
             txt = response.body.decode()
@@ -63,13 +63,18 @@ class FilingSpider(scrapy.Spider):
             positions = find_element(txt, 'infoTable')
             if report_type=='13F NOTICE' and len(positions)==0:
                 #removing notice from index
-                es.remove_url(response.url,index="13f_index")
+                try:
+                    es.remove_url(response.url,index="13f_index")
+                except:
+                    pass
                 self.crawler.stats.inc_value('Removed_page_indices')
                 return
             if len(positions)==0:
                 self.crawler.stats.inc_value('Number_of_filigs_without_position')
             if len(positions)>10000:
                 self.logger.warning(f"Filing with {len(positions)} positions URL={response.url}")
+
+            publish_date=es.get_url(response.url,index="13f_index")['publishdate']
 
             positions_res=[]
             for p in positions:
@@ -95,6 +100,7 @@ class FilingSpider(scrapy.Spider):
                 pos_item['instrumentclass']=titleclass
                 pos_item['put_call']=put_call
                 pos_item['status']='scraped'
+                pos_item['publishdate']=publish_date
                 self.crawler.stats.inc_value('positions')
                 positions_res.append(pos_item)
             f=ItemList()

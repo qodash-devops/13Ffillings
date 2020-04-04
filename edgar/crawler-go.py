@@ -19,7 +19,6 @@ def wait_for_db_connection(urls,timeout=60):
     t=time.time()
     logger.info(f'Waiting for elasticsearch connection [{urls}]...')
     while True:
-
         if time.time()-t>timeout:
             raise ConnectionError("Unable to connect to elastic search url:"+url)
         for url in urls:
