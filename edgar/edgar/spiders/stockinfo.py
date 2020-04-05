@@ -62,9 +62,8 @@ class StockInfo(scrapy.Spider):
                 i = StockInfoItem()
                 i['cusip'] = cusip
                 i['ticker'] = ''
-                i['exchange'] = ''
-                i['status'] = 'NOTFOUND'
-                yield
+                i['status'] = 'cusip_NOTFOUND'
+                yield i
                 self.crawler.stats.inc_value('ninfo')
 
         except:
@@ -122,6 +121,11 @@ class StockInfo(scrapy.Spider):
             yield req
         except:
             self.logger.error(f'Getting info for {ticker}')
+            item = StockInfoItem()
+            item['ticker'] = ticker
+            item['cusip'] = cusip
+            item['status'] = 'info_NOTFOUND'
+            yield item
     def parse_yahoo_spot(self,response):
         item=response.meta['item']
         try:
@@ -129,7 +133,7 @@ class StockInfo(scrapy.Spider):
             data=data['chart']['result'][0]
             if 'timestamp' not in data.keys():
                 self.logger.warning('No spot dates for: '+item['ticker'])
-                return
+                raise ValueError
             time_stamps=pd.to_datetime(data['timestamp'],unit='s')
             res_close=[]
             for i in range(len(time_stamps)):
@@ -139,6 +143,7 @@ class StockInfo(scrapy.Spider):
             self.crawler.stats.inc_value('info_ticker_found')
         except:
             self.logger.error(f'Getting spot for {item["ticker"]}')
+            item['status']='spot_NOTFOUND'
         yield item
 
 def flatten(d, parent_key='', sep='.'):

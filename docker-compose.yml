@@ -8,8 +8,8 @@ services:
     env_file:
       - .env
     restart: always
-    links:
-      - elasticsearch
+#    links:
+#      - elasticsearch
     command: "positions"
   stockinfo:
     build:
@@ -20,8 +20,8 @@ services:
     env_file:
       - .env
     restart: always
-    links:
-      - elasticsearch
+#    links:
+#      - elasticsearch
   elasticsearch:
     image: elasticsearch:7.6.1
     container_name: 13fes

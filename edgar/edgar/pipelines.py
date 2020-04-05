@@ -17,6 +17,7 @@ class InvalidSettingsException(Exception):
 
 class ElasticSearchPipeline(object):
     settings = None
+    stats = None
     es = None
     items_buffer = []
     logger=None
@@ -72,6 +73,7 @@ class ElasticSearchPipeline(object):
         ext = cls()
         ext.settings = crawler.settings
         ext.logger=crawler.spider.logger
+        ext.stats=crawler.stats
         cls.validate_settings(ext.settings)
         ext.es = cls.init_es_client(crawler.settings)
         return ext
@@ -125,9 +127,10 @@ class ElasticSearchPipeline(object):
             self.logger.debug('Generated unique key %s' % item_id)
 
         self.items_buffer.append(index_action)
-
+        self.stats.inc_value('indexed_items')
         if len(self.items_buffer) >= self.settings.get('ELASTICSEARCH_BUFFER_LENGTH', 500):
             self.send_items()
+            self.stats.set_value('sent_items',len(self.items_buffer))
             self.items_buffer = []
 
 
@@ -152,98 +155,3 @@ class ElasticSearchPipeline(object):
             self.send_items()
 
 
-class InfoPipeline(object):
-    logger=None
-    @classmethod
-    def from_crawler(cls, crawler):
-        ext = cls()
-        ext.settings = crawler.settings
-        ext.logger = crawler.spider.logger
-        return ext
-
-    def process_item(self, item, spider):
-        assert spider.name=='stockinfo'
-        if item['ticker']!='':
-            close,info=self.get_spots(item['ticker'])
-            item['close']=close
-            item['info']=info
-            spider.crawler.stats.inc_value('info_ticker_found')
-        spider.crawler.stats.inc_value('ninfo')
-        return item
-    def get_spots(self,ticker):
-        try:
-            t = yf.Ticker(ticker)
-            info=t.get_info(proxy=proxy,as_dict=True)
-            info=self.clean_info(info)
-            res = t.history(period="3y")
-            res = res["Close"]
-            res.index = res.index.to_pydatetime()
-            close = res.dropna().to_frame().reset_index().to_dict(orient='records')
-            return close,info
-        except:
-            self.logger.warning('getting spots for ticker:'+ticker)
-            return {},{}
-    def clean_info(self,info):
-        res_info={}
-        for k,v in info.items():
-            try:
-                if not v is None:
-                    if v!='Infinity':
-                        res_info[k]=info[k]
-            except:
-                pass
-        return res_info
-class PositionsInfoPipeline(InfoPipeline):
-    def process_item(self, item, spider):
-        if spider.name=='stockinfo':
-            try:
-                if item['status']!='NOTFOUND':
-                    positions=es.get_positions(item['cusip'])
-                    for pos in positions:
-                        id=pos["_id"]
-                        params={'ticker':item['ticker'],'close':item['close'],'info':item['info']}
-                        params["status"]="identified"
-                        # script="ctx._source.ticker=params.ticker;ctx._source.close=params.close;ctx._source.info=params.info;"
-                        script="""
-                            ctx._source.ticker=params.ticker;
-                            ctx._source.close=params.close;
-                            ctx._source.info=params.info;
-                            ctx._source.status=params.status;
-                        """
-                        body={
-                                "script" : {
-                                    "source": script,
-                                    "lang": "painless",
-                                    "params" : params
-                                }
-                            }
-                        es.es.update('13f_positions',id,body=body)
-                        spider.crawler.stats.inc_value('identified_positions')
-            except:
-                self.logger.error("processing stock info item cusip:"+item['cusip'])
-
-        elif spider.name=='positions':
-            for i in range(len(item['list'])):
-                cusip=item['list'][i]['cusip']
-                info=es.get_info(cusip)
-                if not info is None:
-                    if info['status']=='NOTFOUND':
-                        continue
-                    try:
-                        item['list'][i]['ticker']=info['ticker']
-                        item['list'][i]['close']=info['close']
-                        item['list'][i]['info']=info['info']
-                        if info['info']!={}:
-                            item['list'][i]['status']="identified"
-                            spider.crawler.stats.inc_value('identified_positions')
-                    except:
-                        self.logger.error(f'geeting info for cusip:{cusip}')
-
-
-
-        return item
-
-
-if __name__ == '__main__':
-    I=InfoPipeline()
-    I.get_spots('MSFT')
