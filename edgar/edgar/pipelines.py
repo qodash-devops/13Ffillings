@@ -130,7 +130,7 @@ class ElasticSearchPipeline(object):
         self.stats.inc_value('indexed_items')
         if len(self.items_buffer) >= self.settings.get('ELASTICSEARCH_BUFFER_LENGTH', 500):
             self.send_items()
-            self.stats.set_value('sent_items',len(self.items_buffer))
+            self.stats.inc_value('sent_items',len(self.items_buffer))
             self.items_buffer = []
 
 
