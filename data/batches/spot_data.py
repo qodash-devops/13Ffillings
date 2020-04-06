@@ -18,6 +18,8 @@ es.es.cluster.put_settings({
     }
 })
 
+es.create_index('13f_positions',settings={"settings": {"index.mapping.ignore_malformed": True , "index.mapping.total_fields.limit": 4000 }})
+
 logger.setLevel(logging.DEBUG)
 
 
@@ -78,8 +80,8 @@ class StockInfoJoin(BatchProcess):
             spot['past_quarter_spot'] = stockinfo['close'][prev_quarter_idx]['Close']
             spot['status']='identified'
             spot['ticker']=r['_source']['ticker']
-            info=flatten(r['_source']['info'],parent_key='info',sep='_')
-            info={k:v for k,v in info.items() if not isinstance(v,list)}
+            info=r['_source']['info']
+            # info={k:v for k,v in info.items() if not isinstance(v,list)}
             spot={**spot,**info}
 
 
