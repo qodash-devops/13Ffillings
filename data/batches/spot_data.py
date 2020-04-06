@@ -68,25 +68,24 @@ class StockInfoJoin(BatchProcess):
             tmp=pd.DataFrame(r['_source']['close'])
             tmp['index'] = pd.to_datetime(tmp['index'])
             quarter_idx=abs(tmp['index']-dt(qd)).idxmin()
-            spot={}
+            quarter_info={}
             stockinfo=r['_source']
-            spot['spot_date'] = stockinfo['close'][quarter_idx]['index']
-            spot['spot'] = stockinfo['close'][quarter_idx]['Close']
+            quarter_info['spot_date'] = stockinfo['close'][quarter_idx]['index']
+            quarter_info['spot'] = stockinfo['close'][quarter_idx]['Close']
             next_quarter_idx = min(quarter_idx + 64, len(stockinfo['close']) - 1)
             prev_quarter_idx = max(quarter_idx - 64, 0)
-            spot['next_quarter_spot_date'] = stockinfo['close'][next_quarter_idx]['index']
-            spot['next_quarter_spot'] = stockinfo['close'][next_quarter_idx]['Close']
-            spot['past_quarter_spot_date'] = stockinfo['close'][prev_quarter_idx]['index']
-            spot['past_quarter_spot'] = stockinfo['close'][prev_quarter_idx]['Close']
-            spot['status']='identified'
-            spot['ticker']=r['_source']['ticker']
+            quarter_info['next_quarter_spot_date'] = stockinfo['close'][next_quarter_idx]['index']
+            quarter_info['next_quarter_spot'] = stockinfo['close'][next_quarter_idx]['Close']
+            quarter_info['past_quarter_spot_date'] = stockinfo['close'][prev_quarter_idx]['index']
+            quarter_info['past_quarter_spot'] = stockinfo['close'][prev_quarter_idx]['Close']
+            quarter_info['status']='identified'
+            quarter_info['ticker']=r['_source']['ticker']
             info=r['_source']['info']
             # info={k:v for k,v in info.items() if not isinstance(v,list)}
-            spot={**spot,**info}
-
+            quarter_info={**quarter_info,**info}
 
             id=(qd,cusip)
-            res.append((id,spot))
+            res.append((id,quarter_info))
         return res
 
     def _update(self,id,r):
