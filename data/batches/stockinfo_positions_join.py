@@ -52,16 +52,12 @@ class StockInfoJoin(BatchProcess):
         qq = {"size": 0, "aggs": {"qd": {"terms": {"field": "quarter_date"}}}}
         self.quarters = es.es.search(qq, index='13f_positions')
         self.quarters = [q['key_as_string'] for q in self.quarters['aggregations']['qd']['buckets']]
-        self.task_ids=[]
-        self.failed_tasks=[]
-        self.last_stats_time=time.time()
-        self.running_procs=0
+        self.batch_size=1000
+        self.buffer=[]
         super().__init__(q, '13f_stockinfo', TARGET_INDEX)
 
     def get_id(self, id):
-        item_unique_key= id[0]+'-'+id[1]
-        item_unique_key=item_unique_key.encode('utf-8')
-        item_id = hashlib.sha1(item_unique_key).hexdigest()
+
         return item_id
 
     def _process(self,r):
@@ -146,20 +142,36 @@ class StockInfoJoin(BatchProcess):
             }
 
         positions=helpers.scan(es.es,q,index='13f_positions')
-        res_positions=[]
         for pos in positions:
             try:
                 pos=pos['_source']
                 pos['value_q_end']=pos['quantity']*r['spot']/1e6
                 pos['value_past_q'] = pos['quantity'] * r['past_quarter_spot'] / 1e6
                 pos['value_next_q'] = pos['quantity'] * r['past_quarter_spot'] / 1e6
-                res_positions.append(pos)
+                res_pos={**pos,**r}
+                index_action = {
+                    '_index': TARGET_INDEX,
+                    '_source': res_pos
+                }
+                self.index_item(index_action)
+            except KeyboardInterrupt:
+                raise KeyboardInterrupt
             except:
                 pass
-        if len(res_positions)>0:
-            r['positions']=res_positions
-            res=es.es.index(TARGET_INDEX,r,id=self.get_id(id))
-        pass
+
+
+
+    def index_item(self,action):
+        item_unique_key = action['_source']['cusip']+'-'+action['_source']['quarter_date']+'-'+action['_source']['filer_cik']+'-'+action['_source']['quantity']
+        item_unique_key = item_unique_key.encode('utf-8')
+        item_id = hashlib.sha1(item_unique_key).hexdigest()
+        action['_id']=item_id
+        self.buffer.append(action)
+        if len(self.buffer)>self.batch_size:
+            gen=helpers.parallel_bulk(es.es,self.buffer,thread_count=5,raise_on_error=False)
+            for success,info in gen:
+                if not success:
+                    logger.error(info)
 
 
 
