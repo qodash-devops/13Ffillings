@@ -17,7 +17,7 @@ class FilingSpider(scrapy.Spider):
     es_index='13f_positions'
     pipeline = []
     custom_settings = {
-        'ELASTICSEARCH_UNIQ_KEY':['filingurl','cusip'],
+        'ELASTICSEARCH_UNIQ_KEY':['filingurl','cusip','quantity'],
         'ELASTICSEARCH_INDEX': es_index,
         'ELASTICSEARCH_TYPE': 'position',
         'ELASTICSEARCH_BUFFER_LENGTH': 500,

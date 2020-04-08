@@ -151,6 +151,7 @@ class ESDB:
         self.es.cluster.put_settings({
                 "persistent" : {
                     "search.max_buckets" : MAX_AGG_SIZE+1000,
+                    "search.max_open_scroll_context": 2028
                 }
         })
 
