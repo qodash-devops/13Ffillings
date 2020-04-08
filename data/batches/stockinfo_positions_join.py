@@ -29,7 +29,12 @@ try:
 except:
     logger.warning(TARGET_INDEX+' not found')
 time.sleep(2)
-es.create_index(TARGET_INDEX,settings={"settings": {"index.mapping.ignore_malformed": True , "index.mapping.total_fields.limit": 4000 }})
+es.create_index(TARGET_INDEX,settings={
+                                    "settings": {"index.mapping.ignore_malformed": True , "index.mapping.total_fields.limit": 4000 },
+                                    "mappings":{
+                                        "properties":{"positions":{"type":"nested"}}
+                                    }
+})
 
 logger.setLevel(logging.DEBUG)
 
@@ -151,8 +156,9 @@ class StockInfoJoin(BatchProcess):
                 res_positions.append(pos)
             except:
                 pass
-        r['positions']=res_positions
-        res=es.es.index(TARGET_INDEX,r,doc_type='info_positions',id=self.get_id(id))
+        if len(res_positions)>0:
+            r['positions']=res_positions
+            res=es.es.index(TARGET_INDEX,r,id=self.get_id(id))
         pass
 
 
