@@ -54,6 +54,7 @@ class StockInfoJoin(BatchProcess):
         self.quarters = [q['key_as_string'] for q in self.quarters['aggregations']['qd']['buckets']]
         self.batch_size=1000
         self.buffer=[]
+        self.indexed_docs=0
         super().__init__(q, '13f_stockinfo', TARGET_INDEX)
 
     def get_id(self, id):
@@ -162,7 +163,7 @@ class StockInfoJoin(BatchProcess):
 
 
     def index_item(self,action):
-        item_unique_key = action['_source']['cusip']+'-'+action['_source']['quarter_date']+'-'+action['_source']['filer_cik']+'-'+action['_source']['quantity']
+        item_unique_key = action['_source']['cusip']+'-'+action['_source']['quarter_date']+'-'+action['_source']['filer_cik']+'-'+str(action['_source']['quantity'])
         item_unique_key = item_unique_key.encode('utf-8')
         item_id = hashlib.sha1(item_unique_key).hexdigest()
         action['_id']=item_id
@@ -172,6 +173,9 @@ class StockInfoJoin(BatchProcess):
             for success,info in gen:
                 if not success:
                     logger.error(info)
+            self.indexed_docs+=len(self.buffer)
+            self.buffer=[]
+            # logger.info(f'{self.indexed_docs} indexed documents')
 
 
 
