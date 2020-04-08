@@ -83,6 +83,7 @@ class FilingSpider(scrapy.Spider):
                 stock_cusip = find_element(p,  'cusip')[0]
                 shares = find_element(p,  'shrsOrPrnAmt')[0]
                 n_shares = find_element(shares,  'sshPrnamt')[0]
+                value = find_element(p,'value')[0]
                 try:
                     n_shares=float(n_shares.replace(' ',''))
                 except:
@@ -95,6 +96,7 @@ class FilingSpider(scrapy.Spider):
                 pos_item['filer_cik']=filer_cik
                 pos_item['quarter_date']=quarter_date
                 pos_item['quantity']=n_shares
+                pos_item['reported_value']=value
                 pos_item['cusip']=stock_cusip
                 pos_item['stockname']=stock_name
                 pos_item['instrumentclass']=titleclass

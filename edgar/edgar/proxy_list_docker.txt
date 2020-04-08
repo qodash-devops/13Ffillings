@@ -1,9 +1,7 @@
-http://proxy-ipvanish-US-New-Orleans-msy-c01.ovpn:8080
-http://proxy-ipvanish-US-Dallas-dal-a59.ovpn:8080
-http://proxy-ipvanish-US-Miami-mia-a43.ovpn:8080
-http://proxy-ipvanish-US-Miami-mia-a27.ovpn:8080
-http://proxy-ipvanish-US-Ashburn-iad-a03.ovpn:8080
-http://proxy-ipvanish-US-New-York-nyc-a40.ovpn:8080
-http://proxy-ipvanish-US-Ashburn-iad-a12.ovpn:8080
-http://proxy-ipvanish-US-New-York-nyc-a21.ovpn:8080
-http://proxy-ipvanish-US-Atlanta-atl-a25.ovpn:8080
+http://proxy-ipvanish-US-Houston-hou-c07.ovpn:8080
+http://proxy-ipvanish-US-Ashburn-iad-a40.ovpn:8080
+http://proxy-ipvanish-US-Chicago-chi-a15.ovpn:8080
+http://proxy-ipvanish-US-Ashburn-iad-a20.ovpn:8080
+http://proxy-ipvanish-US-Los-Angeles-lax-a12.ovpn:8080
+http://proxy-ipvanish-US-Ashburn-iad-a20.ovpn:8080
+http://proxy-ipvanish-US-Ashburn-iad-a21.ovpn:8080

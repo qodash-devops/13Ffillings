@@ -17,6 +17,7 @@ class PositionItem(scrapy.Item):
     quarter_date=scrapy.Field()
     publishdate=scrapy.Field()
     quantity=scrapy.Field()
+    reported_value=scrapy.Field()
     cusip=scrapy.Field()
     stockname=scrapy.Field()
     instrumentclass=scrapy.Field()
