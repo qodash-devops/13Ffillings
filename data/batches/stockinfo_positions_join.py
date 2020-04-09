@@ -30,15 +30,14 @@ except:
     logger.warning(TARGET_INDEX+' not found')
 time.sleep(2)
 es.create_index(TARGET_INDEX,settings={
-                                    "settings": {"index.mapping.ignore_malformed": True , "index.mapping.total_fields.limit": 4000 },
-                                    "mappings":{
-                                        "properties":{"positions":{"type":"nested"}}
-                                    }
+                                    "settings": {"index.mapping.ignore_malformed": True , "index.mapping.total_fields.limit": 1000 }
 })
 
 logger.setLevel(logging.DEBUG)
 
-
+INFO_FIELDS=['info_price_quoteType','info_fundProfile_categoryName','info_fundProfile_categoryName','info_summaryProfile_sector','info_fundProfile_family','info_summaryProfile_country',
+             'info_summaryDetail_marketCap','info_quoteType_exchange','info_price_regularMarketVolume','info_summaryDetail_dividendYield','info_price_exchangeName'
+             'info_summaryProfile_sector','info_summaryProfile_industry','instrument_type','sector','ticker']
 
 class StockInfoJoin(BatchProcess):
     def __init__(self):
@@ -52,14 +51,10 @@ class StockInfoJoin(BatchProcess):
         qq = {"size": 0, "aggs": {"qd": {"terms": {"field": "quarter_date"}}}}
         self.quarters = es.es.search(qq, index='13f_positions')
         self.quarters = [q['key_as_string'] for q in self.quarters['aggregations']['qd']['buckets']]
-        self.batch_size=1000
+        self.batch_size=5000
         self.buffer=[]
         self.indexed_docs=0
         super().__init__(q, '13f_stockinfo', TARGET_INDEX)
-
-    def get_id(self, id):
-
-        return item_id
 
     def _process(self,r):
         def dt(x):
@@ -88,11 +83,23 @@ class StockInfoJoin(BatchProcess):
             quarter_info['status']='identified'
             quarter_info['ticker']=r['_source']['ticker']
             info=r['_source']['info']
-            # info={k:v for k,v in info.items() if not isinstance(v,list)}
-            quarter_info={**quarter_info,**info}
-
-            id=(qd,cusip)
-            res.append((id,quarter_info))
+            if 'info_price_quoteType' in info.keys():
+                if 'info_summaryProfile_industry' in info.keys():
+                    info['sector']=info['info_summaryProfile_industry']
+                    info['instrument_type']='STOCK'
+                elif info['info_price_quoteType']=='ETF':
+                    info['instrument_type']='ETF'
+                    try:
+                        info['sector'] = info['info_fundProfile_categoryName']
+                    except:
+                        info['sector']='UNKNOWN'
+                elif info['info_price_quoteType']=='MUTUALFUND':
+                    info['sector']='MUTUALFUND'
+                    info['instrument_type'] = 'MUTUALFUND'
+                info={k:v for k,v in info.items() if k in INFO_FIELDS}
+                quarter_info={**quarter_info,**info}
+                id=(qd,cusip)
+                res.append((id,quarter_info))
         return res
 
     def _update(self,id,r):
