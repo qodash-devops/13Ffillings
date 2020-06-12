@@ -29,18 +29,18 @@ EXTENSIONS = {
 }
 
 # ######################### PROXY
-if os.path.isfile(settings_dir+'/proxy_list.txt'):
-    PROXY_LIST=settings_dir+'/proxy_list.txt'
-    # Retry many times since proxies often fail
-    RETRY_TIMES = 10
-    # Retry on most error codes since proxies fail for different reasons
-    RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
-    PROXY_MODE = 0
-    DOWNLOADER_MIDDLEWARES = {
-        'scrapy.downloadermiddlewares.retry.RetryMiddleware': 90,
-        'edgar.middlewares.randomproxy.RandomProxy': 100,
-        'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
-    }
+# if os.path.isfile(settings_dir+'/proxy_list.txt'):
+#     PROXY_LIST=settings_dir+'/proxy_list.txt'
+#     # Retry many times since proxies often fail
+#     RETRY_TIMES = 10
+#     # Retry on most error codes since proxies fail for different reasons
+#     RETRY_HTTP_CODES = [500, 503, 504, 400, 403, 404, 408]
+#     PROXY_MODE = 0
+#     DOWNLOADER_MIDDLEWARES = {
+#         'scrapy.downloadermiddlewares.retry.RetryMiddleware': 90,
+#         'edgar.middlewares.randomproxy.RandomProxy': 100,
+#         'scrapy.downloadermiddlewares.httpproxy.HttpProxyMiddleware': 110,
+#     }
 
 
 #########################################

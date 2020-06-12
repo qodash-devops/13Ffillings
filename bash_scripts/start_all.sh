@@ -16,4 +16,4 @@ docker-compose run -d --name edgar_page_indexer crawler indexer
 print_title "Starting in crawlers background  ..."
 docker-compose up -d  stockinfo crawler
 
-docker-compose --compatibility scale stockinfo=4 crawler=4
+docker-compose --compatibility scale stockinfo=4 crawler=4y

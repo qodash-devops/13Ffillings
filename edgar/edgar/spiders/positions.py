@@ -89,7 +89,6 @@ class FilingSpider(scrapy.Spider):
                 except:
                     pass
                 put_call = find_element(p, 'putCall')
-
                 pos_item=PositionItem()
                 pos_item['filingurl']=response.url
                 pos_item['filer_name']=filer_name

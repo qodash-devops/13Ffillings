@@ -10,10 +10,7 @@ from datetime import datetime
 from six import string_types
 import hashlib
 
-
-import sys
 es=ESDB()
-import collections
 
 MAX_ES_TASKS_MIN=2000
 TARGET_INDEX='13f_info_positions'
